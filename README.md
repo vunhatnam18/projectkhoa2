@@ -98,3 +98,29 @@ Mobile-first, breakpoints chính: `480px`, `600px`, `768px`, `992px`, `1100px`. 
 - [ ] Trang tin tức chi tiết `/tin-tuc/:slug`
 - [ ] Pagination cho trang danh mục
 - [ ] Filter/sort sản phẩm (giá, mới nhất, bán chạy)
+
+## Tóm tắt các trang đã làm
+✅ Trang mới (giao diện xong, chưa có chức năng thật)
+Trang	Route	Ghi chú
+Giỏ hàng	/gio-hang	CartContext quản lý state, banner tiến độ miễn phí ship 300k
+Tìm kiếm	/search?q=	Filter giá, sort (mới/bán chạy/giá), pagination
+Đăng nhập / Đăng ký	/dang-nhap	Validation form, chuyển tab, nút Google/Facebook
+Tin tức chi tiết	/tin-tuc/:slug	Layout bài viết + sidebar tin liên quan
+Hệ thống cửa hàng	/cua-hang	Google Maps embed, click đổi địa điểm, tìm kiếm cửa hàng
+Tra cứu đơn hàng	/tra-cuu-don-hang	Form tra cứu, timeline trạng thái (demo 2 đơn mẫu)
+Chính sách giao hàng	/giao-hang	Bảng phí, 3 hình thức giao, FAQ accordion
+##
+✅ Tính năng bổ sung vào trang cũ
+Trang	Thêm gì
+Trang danh mục /danh-muc/:slug	Sort + Pagination
+Header	Dropdown danh mục khi click "☰ Danh mục", badge giỏ hàng hiển thị số thật, các link top bar dẫn đúng trang
+##
+⚠️ Cần làm thêm (chức năng thật)
+Đăng nhập/Đăng ký → kết nối supabase.auth
+Giỏ hàng → lưu vào Supabase hoặc localStorage
+Tra cứu đơn hàng → kết nối bảng orders Supabase
+Tìm kiếm → đang query Supabase thật rồi, cần có data sản phẩm
+Dropdown danh mục → cần có data trong bảng categories Supabase
+##
+📌 Lưu ý  
+Bảng categories trong Supabase cần có data thì dropdown danh mục mới hiện. Hiện tại bạn kia mới chỉ có data "phân loại sản phẩm" — cần nhập thêm các bảng: products, news, orders.

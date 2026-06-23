@@ -9,6 +9,9 @@ import Cart from "./pages/Cart/Cart";
 import Search from "./pages/Search/Search";
 import Auth from "./pages/Auth/Auth";
 import NewsDetail from "./pages/NewsDetail/NewsDetail";
+import Store from "./pages/Store/Store";
+import OrderLookup from "./pages/OrderLookup/OrderLookup";
+import Shipping from "./pages/Shipping/Shipping";
 import { CategoryProvider } from "./context/CategoryContext";
 import { CartProvider } from "./context/CartContext";
 import "./index.css";
@@ -38,6 +41,9 @@ export default function App() {
             <Route path="/search" element={<Search />} />
             <Route path="/dang-nhap" element={<Auth />} />
             <Route path="/tin-tuc/:slug" element={<NewsDetail />} />
+            <Route path="/cua-hang" element={<Store />} />
+            <Route path="/tra-cuu-don-hang" element={<OrderLookup />} />
+            <Route path="/giao-hang" element={<Shipping />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />

@@ -25,12 +25,28 @@ export default function Cart() {
   }
 
   const shippingFee = totalPrice >= 300000 ? 0 : 30000;
+  const remaining = 300000 - totalPrice; // số tiền còn thiếu để miễn ship
+  const progress = Math.min((totalPrice / 300000) * 100, 100);
 
   return (
     <main className={styles.main}>
       <div className="container">
         <Breadcrumb items={[{ label: "Giỏ hàng" }]} />
         <h1 className={styles.title}>Giỏ hàng ({totalItems} sản phẩm)</h1>
+
+        {/* Banner miễn phí ship */}
+        <div className={`${styles.shipBanner} ${shippingFee === 0 ? styles.shipBannerDone : ""}`}>
+          {shippingFee === 0 ? (
+            <span>🎉 Bạn được <strong>miễn phí vận chuyển</strong> cho đơn hàng này!</span>
+          ) : (
+            <span>
+              🚚 Mua thêm <strong>{formatPrice(remaining)}</strong> để được <strong>miễn phí vận chuyển</strong>
+            </span>
+          )}
+          <div className={styles.shipProgress}>
+            <div className={styles.shipProgressBar} style={{ width: `${progress}%` }} />
+          </div>
+        </div>
 
         <div className={styles.layout}>
           {/* Danh sách sản phẩm */}
