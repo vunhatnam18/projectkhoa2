@@ -308,3 +308,34 @@
     grid-column: 1 / -1;
   }
 }
+
+/* ── Ship banner ── */
+.shipBanner {
+  background: #fff8e1;
+  border: 1.5px solid #f5a623;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.shipBannerDone {
+  background: #eaffea;
+  border-color: var(--color-badge-green);
+}
+
+.shipProgress {
+  margin-top: 8px;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.shipProgressBar {
+  height: 100%;
+  background: var(--color-badge-green);
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
