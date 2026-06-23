@@ -1,17 +1,31 @@
+// src/components/PromoBanners/PromoBanners.jsx — TOÀN BỘ FILE SAU KHI SỬA
+// ============================================================
+
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { promos } from "../../data/mockData";
+import { getPromos } from "../../services/contentService"; // ✅ đổi import
 import styles from "./PromoBanners.module.css";
 
 export default function PromoBanners() {
+  const [promos, setPromos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPromos()
+      .then(setPromos)
+      .catch((err) => console.error("Lỗi tải promos:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className={styles.skeleton} />;
+  if (promos.length < 4) return null; // cần đủ 4 promo để hiển thị đúng layout
+
   const [main1, main2, small1, small2] = promos;
 
   return (
     <section className={styles.grid}>
-      {/* Large promo 1 */}
       <PromoCard promo={main1} large />
-      {/* Large promo 2 */}
       <PromoCard promo={main2} large />
-      {/* Small stack */}
       <div className={styles.stack}>
         <PromoCard promo={small1} small />
         <PromoCard promo={small2} small />
@@ -23,16 +37,15 @@ export default function PromoBanners() {
 function PromoCard({ promo, large, small }) {
   return (
     <Link
-      to={promo.ctaLink}
+      to={promo.cta_link}
       className={`${styles.card} ${large ? styles.cardLarge : ""} ${small ? styles.cardSmall : ""}`}
-      style={{ background: promo.bgColor }}
+      style={{ background: promo.bg_color }}
     >
       <div className={styles.cardContent}>
         <p className={styles.cardTitle}>{promo.title}</p>
         <p className={styles.cardSubtitle}>{promo.subtitle}</p>
-        <span className={styles.cardCta}>{promo.ctaText}</span>
+        <span className={styles.cardCta}>{promo.cta_text}</span>
       </div>
-      {/* TODO: Add promo image here */}
       <div className={styles.cardImageArea}>
         <span className={styles.cardEmoji}>
           {promo.type === "trade-in" && "📲"}

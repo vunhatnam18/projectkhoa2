@@ -1,10 +1,17 @@
+// src/components/FlashSale/FlashSale.jsx — TOÀN BỘ FILE SAU KHI SỬA
+// ============================================================
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useFlashSaleProducts } from "../../hooks/useProducts";
-import { flashSaleEndTime } from "../../data/mockData";
-import { formatPrice, formatCountdown } from "../../utils/format";
+import { formatCountdown } from "../../utils/format";
 import ProductCard from "../common/ProductCard/ProductCard";
 import styles from "./FlashSale.module.css";
+
+// ✅ Hardcode trực tiếp ở đây — không còn import từ mockData.js
+// TODO: Sau này nếu muốn quản lý từ admin, thêm cột flash_sale_end_time
+// vào 1 bảng settings trong Supabase rồi fetch giống các hàm khác
+const FLASH_SALE_END_TIME = new Date(Date.now() + 2 * 60 * 60 * 1000 + 38 * 60 * 1000);
 
 function useCountdown(endTime) {
   const [remaining, setRemaining] = useState(endTime - Date.now());
@@ -20,12 +27,11 @@ function useCountdown(endTime) {
 }
 
 export default function FlashSale() {
-  const { products, loading, error } = useFlashSaleProducts();
-  const { hours, minutes, seconds } = useCountdown(flashSaleEndTime);
+  const { products, loading } = useFlashSaleProducts();
+  const { hours, minutes, seconds } = useCountdown(FLASH_SALE_END_TIME);
 
   return (
     <section className={styles.section}>
-      {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={styles.lightning}>⚡</span>
@@ -41,17 +47,12 @@ export default function FlashSale() {
             </div>
           </div>
         </div>
-        <Link to="/flash-sale" className={styles.viewAll}>
-          Xem tất cả ›
-        </Link>
+        <Link to="/flash-sale" className={styles.viewAll}>Xem tất cả ›</Link>
       </div>
 
-      {/* Products */}
       {loading ? (
         <div className={styles.loadingRow}>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className={styles.skeleton} />
-          ))}
+          {Array.from({ length: 5 }).map((_, i) => <div key={i} className={styles.skeleton} />)}
         </div>
       ) : (
         <div className={styles.products}>
