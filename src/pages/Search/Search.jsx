@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import Breadcrumb from "../../components/common/Breadcrumb/Breadcrumb";
 import ProductCard from "../../components/common/ProductCard/ProductCard";
-import { supabase } from "../../services/supabaseClient";
+import { useSearchProducts } from "../../hooks/useProducts";
 import styles from "./Search.module.css";
 
 const SORT_OPTIONS = [
@@ -20,8 +20,6 @@ export default function Search() {
   const [searchParams] = useSearchParams();
   const keyword = searchParams.get("q") || "";
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [sort, setSort] = useState("default");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -29,25 +27,13 @@ export default function Search() {
   const [appliedMax, setAppliedMax] = useState(null);
   const [page, setPage] = useState(1);
 
-  // Fetch khi keyword thay đổi
+  // Reset trang khi keyword thay đổi
   useEffect(() => {
-    if (!keyword.trim()) {
-      setProducts([]);
-      return;
-    }
-
-    setLoading(true);
     setPage(1);
-
-    supabase
-      .from("products")
-      .select("*")
-      .ilike("name", `%${keyword}%`)
-      .then(({ data, error }) => {
-        if (!error) setProducts(data || []);
-      })
-      .finally(() => setLoading(false));
   }, [keyword]);
+
+  // Dùng hook đúng cách — gọi productService qua Supabase
+  const { products, loading } = useSearchProducts(keyword);
 
   // Lọc + sort phía client
   const filtered = useMemo(() => {

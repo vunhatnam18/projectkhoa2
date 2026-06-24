@@ -1,48 +1,52 @@
 // src/pages/OrderLookup/OrderLookup.jsx
 import { useState } from "react";
 import Breadcrumb from "../../components/common/Breadcrumb/Breadcrumb";
+import { supabase } from "../../services/supabaseClient";
 import styles from "./OrderLookup.module.css";
 
-// Mock data để demo giao diện
-const MOCK_ORDERS = {
-  "HN2024001": {
-    id: "HN2024001",
-    date: "20/06/2026",
-    product: "iPhone 15 Pro Max 256GB",
-    total: "34.990.000đ",
-    status: "shipping",
-    statusLabel: "Đang giao hàng",
-    address: "15 Đinh Tiên Hoàng, Hoàn Kiếm, Hà Nội",
-    timeline: [
-      { label: "Đơn hàng đã đặt", date: "20/06/2026 10:30", done: true },
-      { label: "Xác nhận đơn hàng", date: "20/06/2026 11:00", done: true },
-      { label: "Đang giao hàng", date: "21/06/2026 08:00", done: true, active: true },
-      { label: "Giao hàng thành công", date: "", done: false },
-    ],
-  },
-  "HN2024002": {
-    id: "HN2024002",
-    date: "18/06/2026",
-    product: "MacBook Air M2 16GB",
-    total: "28.990.000đ",
-    status: "done",
-    statusLabel: "Đã giao thành công",
-    address: "102 Xuân Thủy, Cầu Giấy, Hà Nội",
-    timeline: [
-      { label: "Đơn hàng đã đặt", date: "18/06/2026 09:00", done: true },
-      { label: "Xác nhận đơn hàng", date: "18/06/2026 09:30", done: true },
-      { label: "Đang giao hàng", date: "19/06/2026 07:00", done: true },
-      { label: "Giao hàng thành công", date: "19/06/2026 14:30", done: true },
-    ],
-  },
+const STATUS_LABEL = {
+  pending: "Chờ xác nhận",
+  confirmed: "Đã xác nhận",
+  shipping: "Đang giao hàng",
+  done: "Giao hàng thành công",
+  cancelled: "Đã hủy",
 };
 
 const STATUS_CLASS = {
   pending: styles.statusPending,
+  confirmed: styles.statusPending,
   shipping: styles.statusShipping,
   done: styles.statusDone,
   cancelled: styles.statusCancelled,
 };
+
+// Các bước timeline tương ứng với trạng thái
+const TIMELINE_STEPS = ["pending", "confirmed", "shipping", "done"];
+const TIMELINE_LABELS = {
+  pending: "Đơn hàng đã đặt",
+  confirmed: "Xác nhận đơn hàng",
+  shipping: "Đang giao hàng",
+  done: "Giao hàng thành công",
+};
+
+function buildTimeline(currentStatus) {
+  const currentIndex = TIMELINE_STEPS.indexOf(currentStatus);
+  return TIMELINE_STEPS.map((step, i) => ({
+    label: TIMELINE_LABELS[step],
+    done: i <= currentIndex,
+    active: i === currentIndex,
+  }));
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return "";
+  const d = new Date(isoStr);
+  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function formatPrice(n) {
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
+}
 
 export default function OrderLookup() {
   const [orderId, setOrderId] = useState("");
@@ -60,7 +64,7 @@ export default function OrderLookup() {
     return e;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const e2 = validate();
     if (Object.keys(e2).length > 0) return setErrors(e2);
@@ -69,17 +73,64 @@ export default function OrderLookup() {
     setResult(null);
     setNotFound(false);
 
-    // TODO: gọi API tra cứu đơn hàng thật
-    setTimeout(() => {
-      const order = MOCK_ORDERS[orderId.toUpperCase()];
-      if (order) {
-        setResult(order);
-      } else {
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          id, status, total_amount, created_at,
+          addresses (full_name, phone, province, district, ward, street_detail),
+          order_items (
+            quantity, price, subtotal,
+            product_variants (
+              color, size, storage,
+              products (name, slug)
+            )
+          )
+        `)
+        .eq("id", orderId.trim())
+        .single();
+
+      if (error || !data) {
         setNotFound(true);
+        return;
       }
+
+      // Kiểm tra số điện thoại khớp với địa chỉ trong đơn
+      const orderPhone = data.addresses?.phone || "";
+      if (orderPhone.replace(/\s/g, "") !== phone.replace(/\s/g, "")) {
+        setNotFound(true);
+        return;
+      }
+
+      setResult(data);
+    } catch {
+      setNotFound(true);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   }
+
+  const timeline = result ? buildTimeline(result.status) : [];
+
+  const productSummary = result?.order_items
+    ?.map((item) => {
+      const v = item.product_variants;
+      const variantStr = [v?.storage, v?.color, v?.size].filter(Boolean).join(" / ");
+      const name = v?.products?.name || "Sản phẩm";
+      return variantStr ? `${name} (${variantStr}) x${item.quantity}` : `${name} x${item.quantity}`;
+    })
+    .join(", ");
+
+  const address = result?.addresses
+    ? [
+        result.addresses.street_detail,
+        result.addresses.ward,
+        result.addresses.district,
+        result.addresses.province,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "";
 
   return (
     <main className={styles.main}>
@@ -102,7 +153,7 @@ export default function OrderLookup() {
                 id="orderId"
                 className={`${styles.input} ${errors.orderId ? styles.inputError : ""}`}
                 type="text"
-                placeholder="Ví dụ: HN2024001"
+                placeholder="Nhập mã đơn hàng"
                 value={orderId}
                 onChange={(e) => {
                   setOrderId(e.target.value);
@@ -148,49 +199,58 @@ export default function OrderLookup() {
               <h2 className={styles.resultTitle}>Thông tin đơn hàng #{result.id}</h2>
 
               <div className={styles.orderInfo}>
-                <div className={styles.orderRow}>
-                  <span className={styles.orderLabel}>Sản phẩm</span>
-                  <span className={styles.orderValue}>{result.product}</span>
-                </div>
+                {productSummary && (
+                  <div className={styles.orderRow}>
+                    <span className={styles.orderLabel}>Sản phẩm</span>
+                    <span className={styles.orderValue}>{productSummary}</span>
+                  </div>
+                )}
                 <div className={styles.orderRow}>
                   <span className={styles.orderLabel}>Ngày đặt</span>
-                  <span className={styles.orderValue}>{result.date}</span>
+                  <span className={styles.orderValue}>{formatDate(result.created_at)}</span>
                 </div>
                 <div className={styles.orderRow}>
                   <span className={styles.orderLabel}>Tổng tiền</span>
-                  <span className={styles.orderValue}>{result.total}</span>
+                  <span className={styles.orderValue}>{formatPrice(result.total_amount)}</span>
                 </div>
-                <div className={styles.orderRow}>
-                  <span className={styles.orderLabel}>Địa chỉ giao</span>
-                  <span className={styles.orderValue}>{result.address}</span>
-                </div>
+                {address && (
+                  <div className={styles.orderRow}>
+                    <span className={styles.orderLabel}>Địa chỉ giao</span>
+                    <span className={styles.orderValue}>{address}</span>
+                  </div>
+                )}
                 <div className={styles.orderRow}>
                   <span className={styles.orderLabel}>Trạng thái</span>
-                  <span className={`${styles.orderValue} ${STATUS_CLASS[result.status]}`}>
-                    {result.statusLabel}
+                  <span className={`${styles.orderValue} ${STATUS_CLASS[result.status] || ""}`}>
+                    {STATUS_LABEL[result.status] || result.status}
                   </span>
                 </div>
               </div>
 
               {/* Timeline */}
-              <div className={styles.timeline} style={{ marginTop: 20 }}>
-                {result.timeline.map((step, i) => (
-                  <div key={i} className={styles.timelineItem}>
-                    <div
-                      className={`${styles.timelineDot} ${
-                        step.active ? styles.timelineDotActive :
-                        step.done ? styles.timelineDotDone : ""
-                      }`}
-                    />
-                    <div className={styles.timelineContent}>
-                      <p className={styles.timelineLabel}>{step.label}</p>
-                      {step.date && (
-                        <p className={styles.timelineDate}>{step.date}</p>
-                      )}
+              {result.status !== "cancelled" && (
+                <div className={styles.timeline} style={{ marginTop: 20 }}>
+                  {timeline.map((step, i) => (
+                    <div key={i} className={styles.timelineItem}>
+                      <div
+                        className={`${styles.timelineDot} ${
+                          step.active ? styles.timelineDotActive :
+                          step.done ? styles.timelineDotDone : ""
+                        }`}
+                      />
+                      <div className={styles.timelineContent}>
+                        <p className={styles.timelineLabel}>{step.label}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
+
+              {result.status === "cancelled" && (
+                <div className={styles.notFound} style={{ marginTop: 16 }}>
+                  Đơn hàng này đã bị hủy.
+                </div>
+              )}
             </div>
           )}
         </div>

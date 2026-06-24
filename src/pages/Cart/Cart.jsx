@@ -1,11 +1,12 @@
 // src/pages/Cart/Cart.jsx
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Breadcrumb from "../../components/common/Breadcrumb/Breadcrumb";
 import { useCart } from "../../context/CartContext";
 import { formatPrice } from "../../utils/format";
 import styles from "./Cart.module.css";
 
 export default function Cart() {
+  const navigate = useNavigate();
   const { items, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
 
   if (items.length === 0) {
@@ -132,7 +133,7 @@ export default function Cart() {
               <span>{formatPrice(totalPrice + shippingFee)}</span>
             </div>
 
-            <button className={styles.checkoutBtn}>
+            <button className={styles.checkoutBtn} onClick={() => navigate("/thanh-toan")}>
               Tiến hành thanh toán
             </button>
             <Link to="/" className={styles.continueBtn}>

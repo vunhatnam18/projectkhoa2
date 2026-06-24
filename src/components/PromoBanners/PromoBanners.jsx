@@ -1,35 +1,32 @@
-// src/components/PromoBanners/PromoBanners.jsx — TOÀN BỘ FILE SAU KHI SỬA
-// ============================================================
-
+// src/components/PromoBanners/PromoBanners.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getPromos } from "../../services/contentService"; // ✅ đổi import
+import { getPromos } from "../../services/contentService";
 import styles from "./PromoBanners.module.css";
+
+const TYPE_ICON = { "trade-in": "📲", installment: "💳", accessory: "🎁", online: "💰" };
 
 export default function PromoBanners() {
   const [promos, setPromos] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getPromos()
-      .then(setPromos)
-      .catch((err) => console.error("Lỗi tải promos:", err))
-      .finally(() => setLoading(false));
+    getPromos().then(setPromos).catch(() => setPromos([]));
   }, []);
 
-  if (loading) return <div className={styles.skeleton} />;
-  if (promos.length < 4) return null; // cần đủ 4 promo để hiển thị đúng layout
+  if (promos.length === 0) return null;
 
   const [main1, main2, small1, small2] = promos;
 
   return (
     <section className={styles.grid}>
-      <PromoCard promo={main1} large />
-      <PromoCard promo={main2} large />
-      <div className={styles.stack}>
-        <PromoCard promo={small1} small />
-        <PromoCard promo={small2} small />
-      </div>
+      {main1 && <PromoCard promo={main1} large />}
+      {main2 && <PromoCard promo={main2} large />}
+      {(small1 || small2) && (
+        <div className={styles.stack}>
+          {small1 && <PromoCard promo={small1} small />}
+          {small2 && <PromoCard promo={small2} small />}
+        </div>
+      )}
     </section>
   );
 }
@@ -37,22 +34,17 @@ export default function PromoBanners() {
 function PromoCard({ promo, large, small }) {
   return (
     <Link
-      to={promo.cta_link}
+      to={promo.cta_link || "/"}
       className={`${styles.card} ${large ? styles.cardLarge : ""} ${small ? styles.cardSmall : ""}`}
-      style={{ background: promo.bg_color }}
+      style={{ background: promo.bg_color || "#c0392b" }}
     >
       <div className={styles.cardContent}>
         <p className={styles.cardTitle}>{promo.title}</p>
-        <p className={styles.cardSubtitle}>{promo.subtitle}</p>
-        <span className={styles.cardCta}>{promo.cta_text}</span>
+        {promo.subtitle && <p className={styles.cardSubtitle}>{promo.subtitle}</p>}
+        <span className={styles.cardCta}>{promo.cta_text || "Xem ngay"}</span>
       </div>
       <div className={styles.cardImageArea}>
-        <span className={styles.cardEmoji}>
-          {promo.type === "trade-in" && "📲"}
-          {promo.type === "installment" && "💳"}
-          {promo.type === "accessory" && "🎁"}
-          {promo.type === "online" && "💰"}
-        </span>
+        <span className={styles.cardEmoji}>{TYPE_ICON[promo.type] || "🎁"}</span>
       </div>
     </Link>
   );

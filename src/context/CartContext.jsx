@@ -1,10 +1,26 @@
 // src/context/CartContext.jsx
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext(undefined);
 
+const STORAGE_KEY = "hnstore_cart";
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => loadFromStorage());
+
+  // Lưu vào localStorage mỗi khi items thay đổi
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
 
   function addToCart(product, quantity = 1) {
     setItems((prev) => {

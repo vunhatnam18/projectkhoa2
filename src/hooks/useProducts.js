@@ -1,30 +1,53 @@
 // src/hooks/useProducts.js
 import { useState, useEffect } from "react";
-import { getFlashSaleProducts } from "../services/productService";
+import {
+  getFlashSaleProducts,
+  getProductsByCategory,
+  getProductBySlug,
+  searchProducts,
+} from "../services/productService";
 
-export function useFlashSaleProducts() {
-  const [products, setProducts] = useState([]);
+function useAsyncData(fetchFn, deps = []) {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(null);
 
-    getFlashSaleProducts()
-      .then((data) => {
-        if (!cancelled) setProducts(data);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    fetchFn()
+      .then((result) => { if (!cancelled) setData(result); })
+      .catch((err) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
 
-    return () => {
-      cancelled = true; // tránh setState sau khi component unmount
-    };
-  }, []);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 
-  return { products, loading, error };
+  return { data, loading, error };
+}
+
+export function useFlashSaleProducts() {
+  const { data, loading, error } = useAsyncData(() => getFlashSaleProducts(8), []);
+  return { products: data || [], loading, error };
+}
+
+export function useProductsByCategory(slug) {
+  const { data, loading, error } = useAsyncData(() => getProductsByCategory(slug), [slug]);
+  return { products: data || [], loading, error };
+}
+
+export function useProductBySlug(slug) {
+  const { data, loading, error } = useAsyncData(() => getProductBySlug(slug), [slug]);
+  return { product: data, loading, error };
+}
+
+export function useSearchProducts(keyword) {
+  const { data, loading, error } = useAsyncData(
+    () => keyword?.trim() ? searchProducts(keyword) : Promise.resolve([]),
+    [keyword]
+  );
+  return { products: data || [], loading, error };
 }

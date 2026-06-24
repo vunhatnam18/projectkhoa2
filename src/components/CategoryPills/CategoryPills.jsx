@@ -1,25 +1,19 @@
-// src/components/CategoryPills/CategoryPills.jsx — TOÀN BỘ FILE SAU KHI SỬA
-// ============================================================
-
+// src/components/CategoryPills/CategoryPills.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getCategoryShortcuts } from "../../services/contentService"; // ✅ đổi import
+import { getCategoryShortcuts } from "../../services/contentService";
 import styles from "./CategoryPills.module.css";
 
 export default function CategoryPills() {
   const [shortcuts, setShortcuts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getCategoryShortcuts()
       .then(setShortcuts)
-      .catch((err) => console.error("Lỗi tải category shortcuts:", err))
-      .finally(() => setLoading(false));
+      .catch(() => setShortcuts([]));
   }, []);
 
-  if (loading) {
-    return <section className={styles.section}><div className={styles.skeleton} /></section>;
-  }
+  if (shortcuts.length === 0) return null;
 
   return (
     <section className={styles.section}>

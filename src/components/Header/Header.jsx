@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useCategories } from "../../context/CategoryContext";
+import { useAuth } from "../../context/AuthContext";
 import styles from "./Header.module.css";
 
 export default function Header() {
@@ -10,6 +11,7 @@ export default function Header() {
   const navigate = useNavigate();
   const { totalItems } = useCart();
   const { categories } = useCategories();
+  const { user, profile } = useAuth();
   const menuRef = useRef(null);
 
   // Đóng dropdown khi click ra ngoài
@@ -44,7 +46,18 @@ export default function Header() {
             <Link to="/tra-cuu-don-hang" className={styles.topLink}>📋 Tra cứu đơn hàng</Link>
           </div>
           <div className={styles.topActions}>
-            <Link to="/dang-nhap" className={styles.topLink}>Đăng nhập / Đăng ký</Link>
+            {user ? (
+              <div style={{ display: "flex", gap: 16 }}>
+                {(profile?.role === "seller" || profile?.role === "admin") && (
+                  <Link to="/seller" className={styles.topLink}>🏪 Quản lý</Link>
+                )}
+                <Link to="/tai-khoan" className={styles.topLink}>
+                  👤 {profile?.name || user.email}
+                </Link>
+              </div>
+            ) : (
+              <Link to="/dang-nhap" className={styles.topLink}>Đăng nhập / Đăng ký</Link>
+            )}
           </div>
         </div>
       </div>

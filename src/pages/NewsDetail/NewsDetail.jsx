@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Breadcrumb from "../../components/common/Breadcrumb/Breadcrumb";
-import { supabase } from "../../services/supabaseClient";
+import { getNewsBySlug, getRelatedNews } from "../../services/contentService";
 import styles from "./NewsDetail.module.css";
 
 export default function NewsDetail() {
@@ -13,25 +13,12 @@ export default function NewsDetail() {
 
   useEffect(() => {
     setLoading(true);
-
-    supabase
-      .from("news")
-      .select("*")
-      .eq("slug", slug)
-      .single()
-      .then(({ data, error }) => {
-        if (!error) {
-          setNews(data);
-          // Load related news
-          supabase
-            .from("news")
-            .select("*")
-            .neq("slug", slug)
-            .order("published_at", { ascending: false })
-            .limit(4)
-            .then(({ data: rel }) => setRelated(rel || []));
-        }
+    getNewsBySlug(slug)
+      .then((data) => {
+        setNews(data);
+        getRelatedNews(slug, 4).then(setRelated).catch(() => setRelated([]));
       })
+      .catch(() => setNews(null))
       .finally(() => setLoading(false));
   }, [slug]);
 

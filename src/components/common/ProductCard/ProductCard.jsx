@@ -1,10 +1,4 @@
-// src/components/common/ProductCard/ProductCard.jsx — CẬP NHẬT
-// ============================================================
-// Thay đổi: badge giảm giá CHỈ hiển thị nếu có discount thật
-// (product.discount hoặc product.originalPrice tồn tại).
-// Với schema mới (chưa có flash sale thật), badge sẽ tự ẩn — KHÔNG hiển thị sai.
-// ============================================================
-
+// src/components/common/ProductCard/ProductCard.jsx
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { formatPrice } from "../../../utils/format";
@@ -13,17 +7,21 @@ import styles from "./ProductCard.module.css";
 export default function ProductCard({ product, showBadge = false }) {
   const [wished, setWished] = useState(false);
 
-  // ✅ Chỉ tính discount nếu có đủ data — không tự suy ra số giả
-  const hasDiscount = Boolean(product.discount) || Boolean(product.originalPrice);
-  const discountPct = product.discount
-    ? product.discount
-    : product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0;
+  const price = product.price ?? product.base_price ?? 0;
+  const originalPrice = product.originalPrice ?? null;
+  const image =
+    product.image ??
+    (product.product_images?.[0]?.image_url) ??
+    null;
+
+  const discountPct =
+    originalPrice && originalPrice > price
+      ? Math.round(((originalPrice - price) / originalPrice) * 100)
+      : 0;
 
   return (
     <Link to={`/san-pham/${product.slug}`} className={styles.card}>
-      {showBadge && hasDiscount && discountPct > 0 && (
+      {showBadge && discountPct > 0 && (
         <span className={styles.badge}>-{discountPct}%</span>
       )}
 
@@ -39,8 +37,8 @@ export default function ProductCard({ product, showBadge = false }) {
       </button>
 
       <div className={styles.imageWrap}>
-        {product.image ? (
-          <img src={product.image} alt={product.name} className={styles.image} />
+        {image ? (
+          <img src={image} alt={product.name} className={styles.image} loading="lazy" />
         ) : (
           <div className={styles.imagePlaceholder}>
             <span>📦</span>
@@ -52,25 +50,22 @@ export default function ProductCard({ product, showBadge = false }) {
         <p className={styles.name}>{product.name}</p>
 
         <div className={styles.prices}>
-          <span className={styles.price}>{formatPrice(product.price)}</span>
-          {product.originalPrice && (
-            <span className={styles.priceOld}>{formatPrice(product.originalPrice)}</span>
+          <span className={styles.price}>{formatPrice(price)}</span>
+          {originalPrice && originalPrice > price && (
+            <span className={styles.priceOld}>{formatPrice(originalPrice)}</span>
           )}
         </div>
 
-        {/* ✅ Chỉ hiển thị sao nếu đã có người đánh giá thật (rating !== null) */}
-        {product.rating !== null && product.rating !== undefined && (
+        {product.rating > 0 && (
           <div className={styles.meta}>
             <span className={styles.stars}>
-              {"★".repeat(Math.round(product.rating))}
-              {"☆".repeat(5 - Math.round(product.rating))}
+              {"★".repeat(Math.floor(product.rating))}
+              {"☆".repeat(5 - Math.floor(product.rating))}
             </span>
-            <span className={styles.reviewCount}>({product.reviewCount})</span>
+            {product.reviewCount > 0 && (
+              <span className={styles.reviewCount}>({product.reviewCount})</span>
+            )}
           </div>
-        )}
-
-        {product.soldCount !== undefined && (
-          <p className={styles.sold}>Đã bán {product.soldCount}</p>
         )}
       </div>
     </Link>
