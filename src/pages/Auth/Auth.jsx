@@ -44,7 +44,7 @@ export default function Auth({ initialTab = "login" }) {
 /* ── Login Form ── */
 function LoginForm() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "", role: "buyer" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -53,6 +53,7 @@ function LoginForm() {
     if (!form.email.trim()) e.email = "Vui lòng nhập email";
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Email không hợp lệ";
     if (!form.password) e.password = "Vui lòng nhập mật khẩu";
+    if (!["buyer", "seller"].includes(form.role)) e.role = "Vai trò không hợp lệ";
     return e;
   }
 
@@ -67,7 +68,7 @@ function LoginForm() {
     if (Object.keys(e2).length > 0) return setErrors(e2);
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: form.email.trim(),
       password: form.password,
     });
@@ -75,6 +76,24 @@ function LoginForm() {
     if (error) {
       setLoading(false);
       return setErrors({ form: getAuthErrorMessage(error.message) });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      return setErrors({ form: "Không tìm thấy hồ sơ người dùng" });
+    }
+
+    if (profile.role !== form.role) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      return setErrors({ form: "Tài khoản không thuộc vai trò đã chọn" });
     }
 
     setLoading(false);
@@ -113,6 +132,8 @@ function LoginForm() {
         {errors.password && <span className={styles.errorMsg}>{errors.password}</span>}
       </div>
 
+      <RoleSelect value={form.role} onChange={handleChange} error={errors.role} prefix="login" />
+
       <div className={styles.forgotLink}>Quên mật khẩu?</div>
 
       {errors.form && <div className={styles.formError}>{errors.form}</div>}
@@ -137,7 +158,13 @@ function LoginForm() {
 
 /* ── Register Form ── */
 function RegisterForm({ onSuccess }) {
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirm: "",
+    role: "buyer",
+  });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -150,6 +177,7 @@ function RegisterForm({ onSuccess }) {
     if (!form.password) e.password = "Vui lòng nhập mật khẩu";
     else if (form.password.length < 6) e.password = "Mật khẩu tối thiểu 6 ký tự";
     if (form.confirm !== form.password) e.confirm = "Mật khẩu xác nhận không khớp";
+    if (!["buyer", "seller"].includes(form.role)) e.role = "Vai trò không hợp lệ";
     return e;
   }
 
@@ -170,7 +198,7 @@ function RegisterForm({ onSuccess }) {
       options: {
         data: {
           name: form.name.trim(),
-          role: "buyer",
+          role: form.role,
         },
       },
     });
@@ -185,7 +213,7 @@ function RegisterForm({ onSuccess }) {
         id: data.user.id,
         name: form.name.trim(),
         email: form.email.trim(),
-        role: "buyer",
+        role: form.role,
       });
     }
 
@@ -264,12 +292,47 @@ function RegisterForm({ onSuccess }) {
         {errors.confirm && <span className={styles.errorMsg}>{errors.confirm}</span>}
       </div>
 
+      <RoleSelect value={form.role} onChange={handleChange} error={errors.role} prefix="reg" />
+
       {errors.form && <div className={styles.formError}>{errors.form}</div>}
 
       <button type="submit" className={styles.submitBtn} disabled={loading}>
         {loading ? "Đang đăng ký..." : "Tạo tài khoản"}
       </button>
     </form>
+  );
+}
+
+function RoleSelect({ value, onChange, error, prefix }) {
+  return (
+    <div className={styles.field}>
+      <span className={styles.label}>Vai trò</span>
+      <div className={styles.roleOptions}>
+        <label className={`${styles.roleOption} ${value === "buyer" ? styles.roleOptionActive : ""}`}>
+          <input
+            id={`${prefix}-role-buyer`}
+            name="role"
+            type="radio"
+            value="buyer"
+            checked={value === "buyer"}
+            onChange={onChange}
+          />
+          Người mua
+        </label>
+        <label className={`${styles.roleOption} ${value === "seller" ? styles.roleOptionActive : ""}`}>
+          <input
+            id={`${prefix}-role-seller`}
+            name="role"
+            type="radio"
+            value="seller"
+            checked={value === "seller"}
+            onChange={onChange}
+          />
+          Người bán
+        </label>
+      </div>
+      {error && <span className={styles.errorMsg}>{error}</span>}
+    </div>
   );
 }
 
