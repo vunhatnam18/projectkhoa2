@@ -7,7 +7,23 @@ import styles from "./Cart.module.css";
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { items, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
+  const {
+    items,
+    selectedItems,
+    selectedTotalItems,
+    selectedTotalPrice,
+    selectedIds,
+    allSelected,
+    removeFromCart,
+    updateQuantity,
+    setItemSelected,
+    selectAll,
+    clearSelection,
+    totalItems,
+    totalPrice,
+    loading,
+    error,
+  } = useCart();
 
   if (items.length === 0) {
     return (
@@ -25,19 +41,45 @@ export default function Cart() {
     );
   }
 
-  const shippingFee = totalPrice >= 300000 ? 0 : 30000;
-  const remaining = 300000 - totalPrice; // số tiền còn thiếu để miễn ship
-  const progress = Math.min((totalPrice / 300000) * 100, 100);
+  const hasSelectedItems = selectedItems.length > 0;
+  const shippingFee = hasSelectedItems && selectedTotalPrice >= 300000 ? 0 : 30000;
+  const selectedGrandTotal = hasSelectedItems ? selectedTotalPrice + shippingFee : 0;
+  const remaining = Math.max(300000 - selectedTotalPrice, 0);
+  const progress = Math.min((selectedTotalPrice / 300000) * 100, 100);
+
+  function handleToggleAll(e) {
+    if (e.target.checked) selectAll();
+    else clearSelection();
+  }
+
+  async function handleQuantityChange(item, quantity) {
+    try {
+      await updateQuantity(item.id, quantity);
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  async function handleRemove(item) {
+    try {
+      await removeFromCart(item.id);
+    } catch (err) {
+      alert(err.message);
+    }
+  }
 
   return (
     <main className={styles.main}>
       <div className="container">
         <Breadcrumb items={[{ label: "Giỏ hàng" }]} />
         <h1 className={styles.title}>Giỏ hàng ({totalItems} sản phẩm)</h1>
+        {error && <div className={styles.errorBox}>{error}</div>}
 
         {/* Banner miễn phí ship */}
-        <div className={`${styles.shipBanner} ${shippingFee === 0 ? styles.shipBannerDone : ""}`}>
-          {shippingFee === 0 ? (
+        <div className={`${styles.shipBanner} ${hasSelectedItems && shippingFee === 0 ? styles.shipBannerDone : ""}`}>
+          {!hasSelectedItems ? (
+            <span>Tick sản phẩm bạn muốn thanh toán để hệ thống tính tổng tiền.</span>
+          ) : shippingFee === 0 ? (
             <span>🎉 Bạn được <strong>miễn phí vận chuyển</strong> cho đơn hàng này!</span>
           ) : (
             <span>
@@ -53,6 +95,14 @@ export default function Cart() {
           {/* Danh sách sản phẩm */}
           <div className={styles.cartList}>
             <div className={styles.cartHeader}>
+              <label className={styles.selectAll}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={handleToggleAll}
+                  aria-label="Chọn tất cả sản phẩm"
+                />
+              </label>
               <span>Sản phẩm</span>
               <span>Đơn giá</span>
               <span>Số lượng</span>
@@ -61,6 +111,15 @@ export default function Cart() {
 
             {items.map((item) => (
               <div key={item.id} className={styles.cartItem}>
+                <label className={styles.selectCell}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(item.id)}
+                    onChange={(e) => setItemSelected(item.id, e.target.checked)}
+                    aria-label={`Chọn ${item.name}`}
+                  />
+                </label>
+
                 {/* Product info */}
                 <div className={styles.productInfo}>
                   {item.image ? (
@@ -72,6 +131,9 @@ export default function Cart() {
                     <Link to={`/san-pham/${item.slug}`} className={styles.productName}>
                       {item.name}
                     </Link>
+                    {item.variantLabel && (
+                      <p className={styles.variantLabel}>{item.variantLabel}</p>
+                    )}
                     <p className={styles.productPrice}>{formatPrice(item.price)}</p>
                   </div>
                 </div>
@@ -83,16 +145,18 @@ export default function Cart() {
                 <div className={styles.qtyControl}>
                   <button
                     className={styles.qtyBtn}
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    onClick={() => handleQuantityChange(item, item.quantity - 1)}
                     aria-label="Giảm số lượng"
+                    disabled={loading}
                   >
                     −
                   </button>
                   <span className={styles.qtyValue}>{item.quantity}</span>
                   <button
                     className={styles.qtyBtn}
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    onClick={() => handleQuantityChange(item, item.quantity + 1)}
                     aria-label="Tăng số lượng"
+                    disabled={loading || (item.stock > 0 && item.quantity >= item.stock)}
                   >
                     +
                   </button>
@@ -105,8 +169,9 @@ export default function Cart() {
                   </span>
                   <button
                     className={styles.removeBtn}
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => handleRemove(item)}
                     aria-label="Xoá sản phẩm"
+                    disabled={loading}
                   >
                     ✕
                   </button>
@@ -120,21 +185,33 @@ export default function Cart() {
             <h2 className={styles.summaryTitle}>Tóm tắt đơn hàng</h2>
 
             <div className={styles.summaryRow}>
-              <span>Tạm tính ({totalItems} sản phẩm)</span>
+              <span>Đã chọn</span>
+              <span>{selectedTotalItems} sản phẩm</span>
+            </div>
+            <div className={styles.summaryRow}>
+              <span>Tạm tính đã chọn</span>
+              <span>{formatPrice(selectedTotalPrice)}</span>
+            </div>
+            <div className={styles.summaryRow}>
+              <span>Tổng giỏ hàng</span>
               <span>{formatPrice(totalPrice)}</span>
             </div>
             <div className={styles.summaryRow}>
               <span>Phí vận chuyển</span>
-              <span>{shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}</span>
+              <span>{!hasSelectedItems ? "—" : shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}</span>
             </div>
 
             <div className={styles.summaryRowTotal}>
-              <span>Tổng cộng</span>
-              <span>{formatPrice(totalPrice + shippingFee)}</span>
+              <span>Tổng thanh toán</span>
+              <span>{formatPrice(selectedGrandTotal)}</span>
             </div>
 
-            <button className={styles.checkoutBtn} onClick={() => navigate("/thanh-toan")}>
-              Tiến hành thanh toán
+            <button
+              className={styles.checkoutBtn}
+              onClick={() => navigate("/thanh-toan")}
+              disabled={!hasSelectedItems}
+            >
+              Thanh toán sản phẩm đã chọn
             </button>
             <Link to="/" className={styles.continueBtn}>
               ← Tiếp tục mua sắm

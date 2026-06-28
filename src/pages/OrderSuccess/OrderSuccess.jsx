@@ -13,6 +13,18 @@ const STATUS_LABEL = {
   delivered: "Đã giao",
   cancelled: "Đã huỷ",
 };
+const PAYMENT_LABEL = {
+  cod: "COD - Thanh toán khi nhận hàng",
+  wallet: "Ví HNstore",
+  vnpay: "VNPay",
+  momo: "Ví MoMo",
+};
+const PAYMENT_STATUS_LABEL = {
+  pending: "Chờ thanh toán",
+  paid: "Đã thanh toán",
+  refunded: "Đã hoàn tiền",
+  failed: "Thanh toán thất bại",
+};
 
 export default function OrderSuccess() {
   const { id } = useParams();
@@ -43,6 +55,7 @@ export default function OrderSuccess() {
 
   const addr = order.addresses;
   const stepIdx = STATUS_STEPS.indexOf(order.status);
+  const payment = order.payments?.[0];
 
   return (
     <main className={styles.main}>
@@ -127,13 +140,14 @@ export default function OrderSuccess() {
             <div className={styles.card} style={{ marginTop: 16 }}>
               <h2 className={styles.cardTitle}>Phương thức thanh toán</h2>
               <p className={styles.paymentInfo}>
-                {order.payments?.[0]?.payment_method?.toUpperCase() || "COD – Thanh toán khi nhận hàng"}
+                {PAYMENT_LABEL[payment?.payment_method] || "COD - Thanh toán khi nhận hàng"}
+                {payment?.payment_status && ` - ${PAYMENT_STATUS_LABEL[payment.payment_status] || payment.payment_status}`}
               </p>
             </div>
 
             <div className={styles.actions}>
               <Link to="/" className={styles.shopBtn}>Tiếp tục mua sắm</Link>
-              <Link to="/tai-khoan/don-hang" className={styles.orderBtn}>Xem đơn hàng của tôi</Link>
+              <Link to="/tai-khoan/orders" className={styles.orderBtn}>Xem đơn hàng của tôi</Link>
             </div>
           </div>
         </div>

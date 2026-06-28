@@ -110,11 +110,6 @@ export default function ProductForm({ sellerId, editData, onSuccess }) {
         });
       }
 
-      // Upload ảnh mới
-      for (let i = 0; i < imageFiles.length; i++) {
-        await uploadProductImage(product.id, imageFiles[i], i);
-      }
-
       // Thêm variants mới (chỉ khi tạo mới)
       if (!editData) {
         for (const v of variants) {
@@ -128,6 +123,26 @@ export default function ProductForm({ sellerId, editData, onSuccess }) {
             });
           }
         }
+      }
+
+      // Upload ảnh sau cùng để lỗi Storage không chặn việc lưu phiên bản sản phẩm.
+      let imageUploadError = null;
+      for (let i = 0; i < imageFiles.length; i++) {
+        try {
+          await uploadProductImage(product.id, imageFiles[i], i);
+        } catch (err) {
+          imageUploadError = err;
+          break;
+        }
+      }
+
+      if (imageUploadError) {
+        alert(
+          "Sản phẩm và phiên bản đã được lưu, nhưng ảnh chưa upload được: " +
+          imageUploadError.message
+        );
+        onSuccess();
+        return;
       }
 
       onSuccess();

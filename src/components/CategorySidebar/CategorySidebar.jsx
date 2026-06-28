@@ -27,7 +27,7 @@ export default function CategorySidebar() {
         {categories.map((cat) => (
           <li key={cat.id} className={styles.item}>
             <Link to={`/danh-muc/${cat.slug}`} className={styles.link}>
-              <span className={styles.icon}>{cat.icon}</span>
+              <span className={styles.icon}>{cat.icon || "📦"}</span>
               <span className={styles.name}>{cat.name}</span>
               <span className={styles.arrow}>›</span>
             </Link>

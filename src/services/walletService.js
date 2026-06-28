@@ -49,7 +49,10 @@ export async function depositToWallet(amount, note = "Nạp tiền (mô phỏng)
     .single();
 
   if (error) throw new Error(error.message);
-  return { balance: Number(data.balance), transactionId: data.transaction_id };
+  return {
+    balance: Number(data.new_balance ?? data.balance),
+    transactionId: data.transaction_id,
+  };
 }
 
 /**
@@ -64,7 +67,10 @@ export async function withdrawFromWallet(amount, note = "Rút tiền (mô phỏn
     .single();
 
   if (error) throw new Error(error.message);
-  return { balance: Number(data.balance), transactionId: data.transaction_id };
+  return {
+    balance: Number(data.new_balance ?? data.balance),
+    transactionId: data.transaction_id,
+  };
 }
 
 /**

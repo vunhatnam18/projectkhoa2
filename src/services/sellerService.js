@@ -1,6 +1,20 @@
 // src/services/sellerService.js
 import { supabase } from "./supabaseClient";
 
+export const PRODUCT_IMAGE_BUCKET = "product-images";
+
+function isMissingProductImageBucket(error) {
+  return error?.message?.toLowerCase().includes("bucket not found");
+}
+
+function createProductImageBucketError() {
+  const error = new Error(
+    `Không tìm thấy Storage bucket "${PRODUCT_IMAGE_BUCKET}". Hãy chạy file supabase/storage_schema.sql trong Supabase SQL Editor rồi thử lại.`
+  );
+  error.code = "PRODUCT_IMAGE_BUCKET_MISSING";
+  return error;
+}
+
 // Lấy sản phẩm của seller
 export async function getSellerProducts(sellerId) {
   const { data, error } = await supabase
@@ -66,16 +80,23 @@ export async function deleteProduct(productId) {
 // Upload ảnh sản phẩm
 export async function uploadProductImage(productId, file, order = 0) {
   const ext = file.name.split(".").pop();
-  const path = `products/${productId}/${Date.now()}.${ext}`;
+  const randomId =
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${order}`;
+  const path = `products/${productId}/${order}-${randomId}.${ext}`;
 
   const { error: uploadErr } = await supabase.storage
-    .from("product-images")
+    .from(PRODUCT_IMAGE_BUCKET)
     .upload(path, file);
 
-  if (uploadErr) throw new Error(uploadErr.message);
+  if (uploadErr) {
+    if (isMissingProductImageBucket(uploadErr)) throw createProductImageBucketError();
+    throw new Error(uploadErr.message);
+  }
 
   const { data: { publicUrl } } = supabase.storage
-    .from("product-images")
+    .from(PRODUCT_IMAGE_BUCKET)
     .getPublicUrl(path);
 
   const { error: dbErr } = await supabase

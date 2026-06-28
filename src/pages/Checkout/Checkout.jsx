@@ -4,12 +4,14 @@ import { Link, useNavigate } from "react-router-dom";
 import Breadcrumb from "../../components/common/Breadcrumb/Breadcrumb";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
-import { createOrder } from "../../services/orderService";
+import { useWallet } from "../../context/WalletContext";
+import { checkoutSelectedCartItems } from "../../services/orderService";
 import { formatPrice } from "../../utils/format";
 import styles from "./Checkout.module.css";
 
 const PAYMENT_METHODS = [
   { id: "cod", icon: "💵", name: "Thanh toán khi nhận hàng (COD)", desc: "Trả tiền mặt khi nhận hàng" },
+  { id: "wallet", icon: "👛", name: "Ví HNstore", desc: "Trừ trực tiếp từ số dư ví của bạn" },
   { id: "vnpay", icon: "💳", name: "VNPay", desc: "Thanh toán qua ví VNPay, thẻ ATM, Visa" },
   { id: "momo", icon: "💜", name: "Ví MoMo", desc: "Thanh toán qua ví điện tử MoMo" },
 ];
@@ -18,7 +20,22 @@ const PROVINCES = ["Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Hải Phò
 
 export default function Checkout() {
   const { user, profile } = useAuth();
-  const { items, totalPrice, totalItems, clearCart } = useCart();
+  const {
+    items,
+    selectedItems,
+    selectedTotalPrice,
+    selectedTotalItems,
+    clearSelectedItems,
+    loading: cartLoading,
+  } = useCart();
+  const {
+    balance,
+    loading: walletLoading,
+    actionLoading: walletActionLoading,
+    withdraw,
+    deposit,
+    refreshWallet,
+  } = useWallet();
   const navigate = useNavigate();
 
   const [address, setAddress] = useState({
@@ -33,8 +50,10 @@ export default function Checkout() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const shippingFee = totalPrice >= 300000 ? 0 : 30000;
-  const total = totalPrice + shippingFee;
+  const hasSelectedItems = selectedItems.length > 0;
+  const shippingFee = selectedTotalPrice >= 300000 ? 0 : 30000;
+  const total = hasSelectedItems ? selectedTotalPrice + shippingFee : 0;
+  const walletInsufficient = payment === "wallet" && !walletLoading && balance < total;
 
   // Chưa đăng nhập
   if (!user) {
@@ -52,6 +71,18 @@ export default function Checkout() {
     );
   }
 
+  if (cartLoading) {
+    return (
+      <main className={styles.main}>
+        <div className="container">
+          <div className={styles.loginRequired}>
+            <p>Đang tải giỏ hàng...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   // Giỏ hàng trống
   if (items.length === 0) {
     return (
@@ -60,6 +91,19 @@ export default function Checkout() {
           <div className={styles.loginRequired}>
             <p>Giỏ hàng trống, không thể thanh toán</p>
             <Link to="/" className={styles.loginBtn}>Tiếp tục mua sắm</Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!hasSelectedItems) {
+    return (
+      <main className={styles.main}>
+        <div className="container">
+          <div className={styles.loginRequired}>
+            <p>Bạn chưa chọn sản phẩm nào để thanh toán</p>
+            <Link to="/gio-hang" className={styles.loginBtn}>Quay lại giỏ hàng</Link>
           </div>
         </div>
       </main>
@@ -85,25 +129,59 @@ export default function Checkout() {
   async function handlePlaceOrder() {
     const e2 = validate();
     if (Object.keys(e2).length > 0) return setErrors(e2);
+    if (walletInsufficient) {
+      alert("Số dư ví không đủ để thanh toán đơn hàng này.");
+      return;
+    }
 
     setLoading(true);
+    let walletTransactionId = null;
+    let walletDebited = false;
     try {
-      const orderItems = items.map(item => ({
+      const orderItems = selectedItems.map(item => ({
+        cartItemId: item.cartItemId || item.id,
         variantId: item.variantId || item.id,
         quantity: item.quantity,
         price: item.price,
       }));
 
-      const order = await createOrder({
-        userId: user.id,
+      if (payment === "wallet") {
+        const walletResult = await withdraw(total, "Thanh toán đơn hàng HNstore");
+        walletTransactionId = walletResult.transactionId;
+        walletDebited = true;
+      }
+
+      const order = await checkoutSelectedCartItems({
+        cartItemIds: orderItems.map((item) => item.cartItemId),
         address,
-        items: orderItems,
-        totalAmount: total,
+        paymentMethod: payment,
+        paymentStatus: payment === "wallet" ? "paid" : "pending",
+        transactionId: walletTransactionId ? String(walletTransactionId) : null,
+        paidAt: payment === "wallet" ? new Date().toISOString() : null,
+        shippingFee,
+        fallback: {
+          userId: user.id,
+          items: orderItems,
+          totalAmount: total,
+        },
       });
 
-      clearCart();
+      if (payment === "wallet") {
+        await refreshWallet();
+      }
+      await clearSelectedItems();
       navigate(`/dat-hang-thanh-cong/${order.id}`);
     } catch (err) {
+      if (walletDebited) {
+        try {
+          await deposit(total, "Hoàn tiền do đặt hàng thất bại");
+          await refreshWallet();
+        } catch {
+          alert("Đặt hàng thất bại và hoàn tiền ví tự động chưa thành công. Vui lòng liên hệ hỗ trợ.");
+          setLoading(false);
+          return;
+        }
+      }
       alert("Đặt hàng thất bại: " + err.message);
     } finally {
       setLoading(false);
@@ -176,13 +254,24 @@ export default function Checkout() {
                 {PAYMENT_METHODS.map(m => (
                   <div
                     key={m.id}
-                    className={`${styles.paymentOption} ${payment === m.id ? styles.paymentOptionActive : ""}`}
+                    className={`${styles.paymentOption} ${payment === m.id ? styles.paymentOptionActive : ""} ${
+                      m.id === "wallet" && walletInsufficient ? styles.paymentOptionError : ""
+                    }`}
                     onClick={() => setPayment(m.id)}
                   >
                     <span className={styles.paymentIcon}>{m.icon}</span>
                     <div>
                       <p className={styles.paymentName}>{m.name}</p>
                       <p className={styles.paymentDesc}>{m.desc}</p>
+                      {m.id === "wallet" && user && (
+                        <p className={walletInsufficient ? styles.paymentWarning : styles.paymentMeta}>
+                          {walletLoading
+                            ? "Đang tải số dư ví..."
+                            : `Số dư: ${formatPrice(balance)}${
+                                walletInsufficient ? " - Không đủ để thanh toán" : ""
+                              }`}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -192,10 +281,10 @@ export default function Checkout() {
 
           {/* Right: order summary */}
           <div className={styles.summary}>
-            <h2 className={styles.summaryTitle}>Đơn hàng ({totalItems} sản phẩm)</h2>
+            <h2 className={styles.summaryTitle}>Đơn hàng ({selectedTotalItems} sản phẩm)</h2>
 
             <div className={styles.orderItems}>
-              {items.map(item => (
+              {selectedItems.map(item => (
                 <div key={item.id} className={styles.orderItem}>
                   {item.image
                     ? <img src={item.image} alt={item.name} className={styles.itemImg} />
@@ -203,6 +292,7 @@ export default function Checkout() {
                   }
                   <div className={styles.itemInfo}>
                     <p className={styles.itemName}>{item.name}</p>
+                    {item.variantLabel && <p className={styles.itemQty}>{item.variantLabel}</p>}
                     <p className={styles.itemQty}>x{item.quantity}</p>
                   </div>
                   <span className={styles.itemPrice}>{formatPrice(item.price * item.quantity)}</span>
@@ -212,7 +302,7 @@ export default function Checkout() {
 
             <div className={styles.summaryRow}>
               <span>Tạm tính</span>
-              <span>{formatPrice(totalPrice)}</span>
+              <span>{formatPrice(selectedTotalPrice)}</span>
             </div>
             <div className={styles.summaryRow}>
               <span>Phí vận chuyển</span>
@@ -222,9 +312,19 @@ export default function Checkout() {
               <span>Tổng thanh toán</span>
               <span>{formatPrice(total)}</span>
             </div>
+            {payment === "wallet" && (
+              <div className={styles.walletSummary}>
+                <span>Số dư ví</span>
+                <strong>{walletLoading ? "Đang tải..." : formatPrice(balance)}</strong>
+              </div>
+            )}
 
-            <button className={styles.placeOrderBtn} onClick={handlePlaceOrder} disabled={loading}>
-              {loading ? "Đang đặt hàng..." : "🛒 Đặt hàng ngay"}
+            <button
+              className={styles.placeOrderBtn}
+              onClick={handlePlaceOrder}
+              disabled={loading || walletActionLoading || walletInsufficient}
+            >
+              {loading || walletActionLoading ? "Đang đặt hàng..." : "🛒 Đặt hàng ngay"}
             </button>
           </div>
         </div>

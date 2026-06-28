@@ -462,12 +462,9 @@ export async function fetchPayments({
 }
 
 /**
- * Đánh dấu hoàn tiền cho 1 payment (đổi payment_status -> 'refunded').
+ * Hoàn tiền cho 1 payment. Nếu thanh toán bằng ví, RPC sẽ cộng lại tiền vào ví user.
  */
 export async function refundPayment(paymentId) {
-  const { error } = await supabase
-    .from('payments')
-    .update({ payment_status: 'refunded' })
-    .eq('id', paymentId);
+  const { error } = await supabase.rpc('refund_payment', { p_payment_id: paymentId });
   if (error) throw error;
 }

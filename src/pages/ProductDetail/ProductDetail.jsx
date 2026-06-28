@@ -1,6 +1,6 @@
 // src/pages/ProductDetail/ProductDetail.jsx
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Breadcrumb from "../../components/common/Breadcrumb/Breadcrumb";
 import { getProductBySlug } from "../../services/productService";
 import { useCart } from "../../context/CartContext";
@@ -10,6 +10,7 @@ import styles from "./ProductDetail.module.css";
 export default function ProductDetail() {
   const { slug } = useParams();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -51,26 +52,38 @@ export default function ProductDetail() {
   const price = selectedVariant?.price ?? product.price ?? product.base_price;
   const images = product.images || [];
 
-  function handleAddToCart() {
-    addToCart({
+  function getCartPayload() {
+    return {
       id: selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id,
+      variantId: selectedVariant?.id || product.id,
+      productId: product.id,
       name: product.name,
       slug: product.slug,
       price,
+      stock: selectedVariant?.stock ?? 0,
+      variantLabel: selectedVariant
+        ? [selectedVariant.storage, selectedVariant.color, selectedVariant.size].filter(Boolean).join(" / ")
+        : "",
       image: images[0]?.image_url || null,
-    }, qty);
-    alert(`Đã thêm ${qty} "${product.name}" vào giỏ hàng!`);
+    };
   }
 
-  function handleBuyNow() {
-    addToCart({
-      id: selectedVariant ? `${product.id}-${selectedVariant.id}` : product.id,
-      name: product.name,
-      slug: product.slug,
-      price,
-      image: images[0]?.image_url || null,
-    }, qty);
-    window.location.href = "/thanh-toan";
+  async function handleAddToCart() {
+    try {
+      await addToCart(getCartPayload(), qty);
+      alert(`Đã thêm ${qty} "${product.name}" vào giỏ hàng!`);
+    } catch (err) {
+      alert("Không thể thêm vào giỏ hàng: " + err.message);
+    }
+  }
+
+  async function handleBuyNow() {
+    try {
+      await addToCart(getCartPayload(), qty, { selectOnlyThis: true });
+      navigate("/thanh-toan");
+    } catch (err) {
+      alert("Không thể mua ngay: " + err.message);
+    }
   }
 
   return (

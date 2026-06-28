@@ -7,7 +7,7 @@ import { getWalletTransactions } from "../../services/walletService";
 import { formatPrice } from "../../utils/format";
 import styles from "./Wallet.module.css";
 
-const QUICK_AMOUNTS = [50000, 100000, 200000, 500000, 1000000];
+const QUICK_AMOUNTS = [100000, 200000, 500000, 1000000, 10000000, 50000000];
 
 const TX_TYPE_LABEL = { deposit: "Nạp tiền", withdraw: "Rút tiền" };
 

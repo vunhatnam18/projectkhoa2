@@ -1,11 +1,13 @@
 // src/components/CategoryPills/CategoryPills.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useCategories } from "../../context/CategoryContext";
 import { getCategoryShortcuts } from "../../services/contentService";
 import styles from "./CategoryPills.module.css";
 
 export default function CategoryPills() {
   const [shortcuts, setShortcuts] = useState([]);
+  const { categories, loading } = useCategories();
 
   useEffect(() => {
     getCategoryShortcuts()
@@ -13,21 +15,31 @@ export default function CategoryPills() {
       .catch(() => setShortcuts([]));
   }, []);
 
-  if (shortcuts.length === 0) return null;
+  const items = shortcuts.length > 0 ? shortcuts : categories;
+
+  if (loading && items.length === 0) {
+    return (
+      <section className={styles.section} aria-label="Danh mục nổi bật đang tải">
+        <div className={styles.track}>
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className={`${styles.pill} ${styles.skeleton}`} />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (items.length === 0) return null;
 
   return (
-    <section className={styles.section}>
+    <section className={styles.section} aria-label="Danh mục nổi bật">
       <div className={styles.track}>
-        {shortcuts.map((cat) => (
+        {items.map((cat) => (
           <Link key={cat.id} to={`/danh-muc/${cat.slug}`} className={styles.pill}>
-            <span className={styles.icon}>{cat.icon}</span>
+            <span className={styles.icon}>{cat.icon || "📦"}</span>
             <span className={styles.name}>{cat.name}</span>
           </Link>
         ))}
-        <Link to="/danh-muc" className={`${styles.pill} ${styles.pillMore}`}>
-          <span className={styles.icon}>···</span>
-          <span className={styles.name}>Xem thêm</span>
-        </Link>
       </div>
     </section>
   );

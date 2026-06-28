@@ -1,8 +1,27 @@
 // src/services/orderService.js
 import { supabase } from "./supabaseClient";
 
-// Tạo hoặc lấy địa chỉ, rồi tạo đơn hàng
-export async function createOrder({ userId, address, items, totalAmount }) {
+function isMissingCheckoutRpc(error) {
+  return (
+    error?.code === "PGRST202" ||
+    (
+      error?.message?.includes("checkout_selected_cart_items") &&
+      error?.message?.includes("schema cache")
+    )
+  );
+}
+
+// Tạo địa chỉ, đơn hàng, chi tiết đơn và bản ghi thanh toán
+export async function createOrder({
+  userId,
+  address,
+  items,
+  totalAmount,
+  paymentMethod = "cod",
+  paymentStatus = "pending",
+  transactionId = null,
+  paidAt = null,
+}) {
   // 1. Lưu địa chỉ vào bảng addresses
   const { data: addr, error: addrErr } = await supabase
     .from("addresses")
@@ -50,7 +69,77 @@ export async function createOrder({ userId, address, items, totalAmount }) {
 
   if (itemsErr) throw new Error(itemsErr.message);
 
+  // 4. Ghi nhận thanh toán để admin/trang thành công đọc được cùng một nguồn dữ liệu
+  const { error: paymentErr } = await supabase
+    .from("payments")
+    .insert([{
+      order_id: order.id,
+      payment_method: paymentMethod,
+      payment_status: paymentStatus,
+      transaction_id: transactionId,
+      paid_at: paidAt,
+    }]);
+
+  if (paymentErr) throw new Error(paymentErr.message);
+
   return order;
+}
+
+export async function checkoutSelectedCartItems({
+  cartItemIds,
+  address,
+  paymentMethod = "cod",
+  paymentStatus = "pending",
+  transactionId = null,
+  paidAt = null,
+  shippingFee = 0,
+  fallback = null,
+}) {
+  const { data: orderId, error } = await supabase.rpc("checkout_selected_cart_items", {
+    p_cart_item_ids: cartItemIds.map(Number),
+    p_full_name: address.fullName,
+    p_phone: address.phone,
+    p_province: address.province,
+    p_district: address.district,
+    p_ward: address.ward || null,
+    p_street_detail: address.streetDetail,
+    p_payment_method: paymentMethod,
+    p_payment_status: paymentStatus,
+    p_transaction_id: transactionId,
+    p_paid_at: paidAt,
+    p_shipping_fee: shippingFee,
+  });
+
+  if (error) {
+    if (isMissingCheckoutRpc(error) && fallback?.userId && fallback?.items?.length) {
+      try {
+        return await createOrder({
+          userId: fallback.userId,
+          address,
+          items: fallback.items,
+          totalAmount: fallback.totalAmount,
+          paymentMethod,
+          paymentStatus,
+          transactionId,
+          paidAt,
+        });
+      } catch (fallbackError) {
+        throw new Error(
+          `Database chưa cài RPC checkout_selected_cart_items. Fallback tạo đơn trực tiếp cũng thất bại: ${fallbackError.message}`
+        );
+      }
+    }
+
+    if (isMissingCheckoutRpc(error)) {
+      throw new Error(
+        "Database chưa cài RPC checkout_selected_cart_items. Hãy chạy lại file supabase/cart_checkout_schema.sql trong Supabase SQL Editor."
+      );
+    }
+
+    throw new Error(error.message);
+  }
+
+  return { id: orderId };
 }
 
 // Lấy danh sách đơn hàng của user
