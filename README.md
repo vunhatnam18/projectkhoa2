@@ -203,3 +203,23 @@ Mobile-first, breakpoints: `480px`, `600px`, `768px`, `992px`, `1100px`.
 - [ ] Trang quản lý seller (CRUD sản phẩm, xem đơn hàng)
 - [ ] Tích hợp thanh toán thật (VNPay/Momo) → cập nhật bảng `payments`
 - [ ] Bảng `flash_sales` nếu muốn làm thật phần khuyến mãi giới hạn thời gian
+
+## . Thêm Route Guard
+Tạo 
+ProtectedRoute.jsx
+ProtectedRoute — chặn /gio-hang, /thanh-toan, /tai-khoan nếu chưa đăng nhập
+SellerRoute — chặn /seller nếu không phải seller/admin
+/admin đã có guard sẵn trong AdminLayout
+
+## . Seed data vào Supabase
+Tạo file seed.sql và chạy lên Supabase:
+
+5 brands, 5 categories, 5 category shortcuts
+3 banners, 3 promos, 4 tin tức
+10 sản phẩm thực tế (iPhone, Samsung, MacBook, Dell, Sony, Logitech)
+
+## . Fix kết nối Supabase
+Tắt RLS cho các bảng public (products, banners, news...)
+Cập nhật VITE_SUPABASE_ANON_KEY mới trong .env (key cũ bị 401)
+Restart dev server
+Kết quả cuối: trang web chạy có đầy đủ banner, categories, sản phẩm hiển thị.
