@@ -260,3 +260,253 @@
     font-size: 22px;
   }
 }
+
+/* Reviews Section */
+.reviewsSection {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 28px;
+  margin-top: 24px;
+}
+
+.reviewsTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.reviewsSummary {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.reviewsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.reviewCard {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.reviewAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.reviewName {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reviewStars {
+  color: var(--color-star);
+  font-size: 13px;
+}
+
+.reviewDate {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+.reviewComment {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* Variants label */
+.variantLabel {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--color-text);
+}
+
+/* Brand */
+.brand {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* Related / Gợi ý sản phẩm */
+.relatedSection {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.relatedTitle {
+  font-size: 17px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.relatedSub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  text-transform: none;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .relatedGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Color dots cho variant buttons */
+.variantBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.variantBtn {
+  padding: 7px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #fff;
+  color: var(--color-text);
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.variantBtn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.variantBtnActive {
+  border-color: var(--color-primary);
+  background: #fff5f5;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.variantBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* Rating summary bar */
+.ratingBar {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  background: #fafafa;
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.ratingBig {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+}
+
+.ratingNumber {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.ratingBig .ratingStars {
+  color: var(--color-star);
+  font-size: 16px;
+}
+
+.ratingRows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ratingRowLabel {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ratingRowBar {
+  flex: 1;
+  height: 8px;
+  background: #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ratingRowFill {
+  height: 100%;
+  background: var(--color-star);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.ratingRowCount {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  width: 20px;
+  flex-shrink: 0;
+}

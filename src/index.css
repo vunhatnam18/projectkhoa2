@@ -97,3 +97,51 @@ ol {
 ::-webkit-scrollbar-thumb:hover {
   background: #aaa;
 }
+
+/* ============================
+   Dark Mode
+   ============================ */
+[data-theme="dark"] {
+  --color-primary: #ff4d5e;
+  --color-primary-dark: #e0001b;
+  --color-primary-light: #ff6b78;
+  --color-text: #e8e8e8;
+  --color-text-secondary: #aaa;
+  --color-text-muted: #777;
+  --color-bg: #0f0f0f;
+  --color-white: #1a1a1a;
+  --color-border: #2e2e2e;
+  --color-price: #ff4d5e;
+  --color-price-old: #666;
+  --color-star: #f5a623;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-card-hover: 0 6px 20px rgba(0,0,0,0.6);
+}
+
+[data-theme="dark"] body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #242424;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] input::placeholder {
+  color: #555;
+}
+
+[data-theme="dark"] img {
+  opacity: 0.9;
+}
+
+/* Ẩn Supabase AI widget */
+[data-supabase-ai-assistant],
+#supabase-ai-assistant,
+.supabase-ai-assistant {
+  display: none !important;
+}

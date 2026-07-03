@@ -2,7 +2,7 @@
 import { supabase } from "./supabaseClient";
 
 // Sản phẩm mới nhất — dùng cho trang chủ
-export async function getFlashSaleProducts(limit = 8) {
+export async function getFlashSaleProducts(limit = 20) {
   const { data, error } = await supabase
     .from("products")
     .select(`

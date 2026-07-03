@@ -143,3 +143,74 @@
   opacity: 0.4;
   pointer-events: none;
 }
+
+/* ── Smart Filter ── */
+.productCount {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  margin-left: 10px;
+}
+
+.filterWrap {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterGroupLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.filterBtns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-border);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--color-white);
+  color: var(--color-text);
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.filterBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.filterBtnActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.emptyFilter {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}

@@ -1,225 +1,147 @@
-# HNstore – Marketplace Frontend (React + Vite + Supabase)
+# HNstore – Sàn thương mại điện tử
 
-Giao diện thương mại điện tử tái hiện từ thiết kế tham khảo, đổi thương hiệu thành **HNstore**. Không sử dụng bất kỳ tài sản/thương hiệu của CellphoneS.
-
-Dự án đã chuyển từ mock data sang **Supabase** (PostgreSQL + Auth + Auto REST API), theo mô hình **marketplace đa người bán** (nhiều seller, không phải 1 shop đơn lẻ).
+Dự án cuối khoá — sàn thương mại điện tử đa người bán xây dựng bằng **React + Vite + Supabase**.
 
 ## 🚀 Tech Stack
 
-- **React 19** + **Vite 6**
-- **React Router v6** – điều hướng SPA
-- **CSS Modules** – style scoped theo component
-- **Supabase** – database (PostgreSQL), Auth, auto-generated REST API
-- **Context API** – chia sẻ data fetch 1 lần (categories) cho toàn app
+| Công nghệ | Vai trò |
+|---|---|
+| React 19 + Vite 6 | Frontend framework + build tool |
+| React Router v6 | Điều hướng SPA |
+| CSS Modules | Style scoped theo component, không dùng UI library |
+| Supabase | PostgreSQL database + Auth + REST API + Storage |
+| Context API | Quản lý state: Auth, Cart, Wallet, Categories |
 
-> Ant Design **không** được dùng — UI build bằng CSS Modules thuần để khớp pixel-perfect với thiết kế gốc.
+## ✨ Tính năng
 
-## 📦 Cài đặt
+### Người mua (Buyer)
+- Duyệt sản phẩm theo danh mục, tìm kiếm
+- Xem chi tiết sản phẩm, chọn variant (màu/dung lượng/size)
+- Giỏ hàng: thêm/xoá/chỉnh số lượng, chọn từng sản phẩm để thanh toán
+- Giỏ hàng local (chưa đăng nhập) → tự sync lên Supabase khi đăng nhập
+- Thanh toán: COD hoặc Ví HNstore, kèm địa chỉ giao hàng
+- Ví điện tử: nạp/rút mô phỏng, xem lịch sử giao dịch
+- Tài khoản: xem/sửa thông tin, xem đơn hàng, đánh giá sản phẩm đã mua
+- Tra cứu đơn hàng theo mã + số điện thoại
+
+### Người bán (Seller)
+- Dashboard tổng quan: số sản phẩm đang bán / chờ duyệt
+- CRUD sản phẩm: thêm, sửa, xoá, upload ảnh lên Supabase Storage
+- Thêm variant: màu sắc, dung lượng, giá, tồn kho
+
+### Quản trị viên (Admin)
+- Admin Panel riêng tại `/admin` (không có Header/Footer shop)
+- Dashboard: thống kê user, sản phẩm, đơn hàng, doanh thu, biểu đồ 14 ngày
+- Quản lý người dùng: xem, đổi role, xoá
+- Quản lý seller: xem báo cáo doanh thu theo seller
+- Duyệt sản phẩm: approve/reject sản phẩm của seller
+- Quản lý đơn hàng: xem chi tiết, cập nhật trạng thái
+- Quản lý thanh toán: hoàn tiền tự động về ví nếu đơn thanh toán bằng ví
+
+## 📦 Cài đặt & Chạy
 
 ```bash
+# 1. Clone và cài dependencies
+git clone <repo-url>
+cd Project-K2-Mindx
 npm install
-npm install @supabase/supabase-js react-router-dom
 
+# 2. Tạo file .env
 cp .env.example .env
-# Điền VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY (xem mục "Kết nối Supabase")
+# Điền VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY
 
+# 3. Chạy dev server
 npm run dev       # http://localhost:3000
-npm run build
-npm run preview
-```
-
-## 🗂️ Kiến trúc thư mục
-
-```
-src/
-├── components/           # Mỗi component: {Name}.jsx + {Name}.module.css
-│   ├── Header/
-│   ├── CategorySidebar/  # Đọc categories từ Context, không tự fetch
-│   ├── HeroBanner/
-│   ├── CategoryPills/
-│   ├── PromoBanners/
-│   ├── FlashSale/        # ⚠️ Tạm hiển thị sản phẩm mới nhất — xem ghi chú dưới
-│   ├── WhyUs/
-│   ├── TechNews/
-│   ├── Newsletter/
-│   ├── Footer/           # Dùng nội dung tĩnh trong data/mockData.js
-│   └── common/
-│       ├── ProductCard/
-│       └── Breadcrumb/
-├── pages/
-│   ├── Home/
-│   ├── Category/         # /danh-muc/:slug
-│   └── ProductDetail/    # /san-pham/:slug
-├── context/
-│   └── CategoryContext.jsx   # Fetch categories 1 lần, share toàn app
-├── services/
-│   ├── supabaseClient.js     # Khởi tạo Supabase client
-│   ├── productService.js     # Query products/variants/images/reviews
-│   └── contentService.js     # Query banners/promos/news/categories
-├── hooks/
-│   └── useProducts.js
-├── utils/
-│   └── format.js
-└── data/
-    └── mockData.js        # CHỈ còn footerLinks (nội dung tĩnh) — xem mục dưới
 ```
 
 ## 🔌 Kết nối Supabase
 
-### 1. Lấy thông tin project
-
-Supabase Dashboard → project của bạn → **Settings** → **API**:
-- `Project URL` → dán vào `VITE_SUPABASE_URL`
-- `Project API keys` → copy key **`anon` `public`** (KHÔNG dùng `service_role`) → dán vào `VITE_SUPABASE_ANON_KEY`
-
-⚠️ Lấy domain gốc, không lấy URL có sẵn `/rest/v1/` ở cuối — Supabase SDK tự thêm phần đó.
+Vào Supabase Dashboard → project → **Settings → API Keys**:
+- `VITE_SUPABASE_URL` = Project URL
+- `VITE_SUPABASE_ANON_KEY` = **Publishable key** (default)
 
 ```env
 VITE_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
 ```
 
-### 2. Chạy schema SQL
+## 🗄️ Schema SQL
 
-Trong Supabase Dashboard → **SQL Editor** → New query, chạy theo thứ tự:
+Chạy theo thứ tự trong **Supabase SQL Editor**:
 
-| File | Khi nào chạy |
+| File | Mô tả |
 |---|---|
-|đã dùng các schema mới hoàn toàn, không dùng các dữ liệu trước đó nữa
-| `supabase/auth_role_schema.sql` | Chạy sau khi có bảng `users` để đăng ký lưu đúng vai trò buyer/seller |
-| `supabase/storage_schema.sql` | Chạy để tạo Storage bucket `product-images` cho ảnh sản phẩm seller upload |
-| `supabase/cart_checkout_schema.sql` | Chạy sau schema marketplace hiện tại để thêm giỏ hàng và checkout nhiều sản phẩm |
-| `supabase/wallet_schema.sql` | Chạy sau schema marketplace hiện tại để thêm ví điện tử, lịch sử giao dịch và RPC nạp/rút |
-| `supabase/admin_access_schema.sql` | Chạy sau khi tạo Auth user admin để promote role `admin` và mở RLS cho admin panel |
+| `supabase/auth_role_schema.sql` | Trigger tạo profile khi đăng ký, RLS theo role |
+| `supabase/storage_schema.sql` | Bucket `product-images` cho seller upload ảnh |
+| `supabase/cart_checkout_schema.sql` | Giỏ hàng, RPC checkout atomic |
+| `supabase/wallet_schema.sql` | Ví điện tử, lịch sử giao dịch, RPC nạp/rút/hoàn tiền |
+| `supabase/admin_access_schema.sql` | Promote role admin, mở quyền admin panel |
+| `seed.sql` | Dữ liệu mẫu: brands, categories, banners, promos, news, 10 sản phẩm |
 
+## 🗂️ Kiến trúc thư mục
 
-### 3. Đăng nhập / Đăng ký dùng Supabase Auth
-
-Bảng `users` (public) chỉ lưu **profile** (name, phone, role) — **không** lưu password. Supabase Auth tự quản lý password ở bảng ẩn `auth.users`. Một trigger SQL (`on_auth_user_created`) tự tạo profile tương ứng mỗi khi có người `signUp` thành công.
-
-```js
-// Đăng ký
-await supabase.auth.signUp({ email, password });
-
-// Đăng nhập
-await supabase.auth.signInWithPassword({ email, password });
-
-// Lấy user hiện tại
-const { data: { user } } = await supabase.auth.getUser();
+```
+src/
+├── admin/                  # Admin Panel độc lập
+│   ├── layouts/            # AdminLayout (sidebar + topbar)
+│   ├── pages/              # Dashboard, Users, Sellers, Products, Orders, Payments
+│   ├── hooks/              # useAdminAuth
+│   └── lib/                # adminApi.js — tất cả queries admin
+├── components/
+│   ├── Header/             # Topbar + search + cart badge + wallet balance
+│   ├── Footer/
+│   ├── Toast/              # Toast notification (thay thế alert)
+│   ├── ScrollToTop.jsx     # Auto scroll khi chuyển trang
+│   ├── ProtectedRoute.jsx  # Route guard: user / seller / admin
+│   └── common/
+│       ├── ProductCard/
+│       ├── Breadcrumb/
+│       └── ReviewModal/
+├── context/
+│   ├── AuthContext.jsx     # Supabase session + user profile + role flags
+│   ├── CartContext.jsx     # Giỏ hàng: server (Supabase) cho buyer đăng nhập, localStorage cho khách
+│   ├── CategoryContext.jsx # Fetch categories 1 lần, share toàn app
+│   └── WalletContext.jsx   # Số dư ví, deposit/withdraw actions
+├── pages/
+│   ├── Home/               # Trang chủ: banner, category pills, flash sale, promo, news
+│   ├── Category/           # /danh-muc/:slug — lọc + sort + phân trang
+│   ├── AllCategories/      # /danh-muc — grid tất cả danh mục
+│   ├── ProductDetail/      # /san-pham/:slug — gallery, variants, add to cart
+│   ├── Cart/               # Checkbox chọn, tính tiền theo lựa chọn
+│   ├── Checkout/           # Form địa chỉ + thanh toán COD/Ví
+│   ├── OrderSuccess/       # Timeline trạng thái đơn hàng
+│   ├── Account/            # Profile, lịch sử đơn hàng, đánh giá
+│   ├── Wallet/             # Nạp/rút ví, lịch sử giao dịch
+│   ├── Auth/               # Đăng nhập / Đăng ký / Quên mật khẩu
+│   ├── Search/             # Tìm kiếm + lọc giá + sort
+│   ├── OrderLookup/        # Tra cứu đơn hàng bằng mã + SĐT
+│   ├── Seller/             # Dashboard seller + CRUD sản phẩm
+│   ├── Store/              # Hệ thống cửa hàng + bản đồ
+│   ├── Shipping/           # Chính sách giao hàng
+│   └── NewsDetail/         # Bài viết tin tức
+├── services/
+│   ├── supabaseClient.js
+│   ├── productService.js   # CRUD products, search, normalizeProduct
+│   ├── contentService.js   # banners, promos, news, categories
+│   ├── orderService.js     # createOrder, checkout RPC, getUserOrders
+│   ├── cartService.js      # getCartItems, addCartItem, RPC cart
+│   ├── walletService.js    # getWallet, deposit, withdraw, transactions
+│   └── sellerService.js    # seller CRUD + admin functions
+└── hooks/
+    └── useProducts.js      # useFlashSaleProducts, useProductsByCategory, useSearchProducts
 ```
 
-## 🗄️ Database Schema (marketplace đa người bán)
+## 🔐 Bảo mật
 
-| Bảng | Vai trò |
-|---|---|
-| `users` | Profile user — liên kết `auth.users`, có `role`: admin / buyer / seller |
-| `addresses` | Mỗi user nhiều địa chỉ giao hàng |
-| `brands` | Thương hiệu (Apple, Samsung...) |
-| `categories`, `category_shortcuts` | Danh mục sản phẩm |
-| `products` | Sản phẩm — có `seller_id` (ai đăng bán), `slug`, `status` (active/pending/locking) |
-| `product_images` | Nhiều ảnh / sản phẩm, có `display_order` |
-| `product_variants` | Biến thể (màu/size/dung lượng), giá và kho riêng từng variant |
-| `reviews` | Đánh giá sản phẩm — chỉ user **đã mua và đơn hàng `delivered`** mới review được |
-| `orders`, `order_items` | Đơn hàng và chi tiết từng dòng |
-| `payments` | Thanh toán theo đơn hàng |
-| `wallets`, `wallet_transactions` | Ví điện tử người dùng và lịch sử nạp/rút |
-| `carts`, `cart_items` | Giỏ hàng của buyer trước khi checkout; mỗi buyer có tối đa 1 cart `active` |
-| `banners`, `promos`, `news`, `newsletter_subscribers` | Nội dung trang chủ |
+- **Row Level Security** bật trên toàn bộ bảng — user chỉ đọc/sửa dữ liệu của mình
+- **Route guard** phía frontend: ProtectedRoute (user), SellerRoute (seller/admin), AdminLayout (admin)
+- **SECURITY DEFINER RPCs** có kiểm tra `auth.uid()` và role trước khi thực thi
+- **Wallet**: compensating transaction — nếu đặt hàng thất bại sau khi đã trừ ví, tự động hoàn tiền
 
-Row Level Security (RLS) đã bật cho mọi bảng — user chỉ thấy đơn hàng/địa chỉ của chính mình, seller chỉ sửa được sản phẩm mình đăng, sản phẩm `pending`/`locking` ẩn khỏi người mua thường.
+## 👥 Tài khoản test
 
-### Admin panel
-
-Route `/admin` là trang quản trị riêng, chỉ user có `users.role = 'admin'` truy cập được. Để tạo admin đầu tiên:
-
-- Tạo/đăng ký một tài khoản Supabase Auth bình thường.
-- Mở `supabase/admin_access_schema.sql`, đổi `admin@example.com` thành email tài khoản đó.
-- Chạy file SQL trong Supabase SQL Editor.
-- Đăng nhập ở `/dang-nhap`, chọn vai trò `Admin`.
-
-### Checkout từ giỏ hàng
-
-File `supabase/cart_checkout_schema.sql` thêm các RPC:
-
-- `get_or_create_active_cart()` tạo/lấy giỏ hàng `active` của buyer hiện tại.
-- `add_to_cart(p_variant_id, p_quantity)` thêm sản phẩm vào giỏ, tự cộng dồn nếu variant đã tồn tại.
-- `checkout_cart(p_address_id, p_payment_method)` thanh toán toàn bộ sản phẩm trong giỏ.
-- `checkout_selected_cart_items(...)` thanh toán chỉ các dòng giỏ hàng đã chọn, tạo địa chỉ/đơn hàng/payment, trừ tồn kho và xoá các dòng đã mua khỏi giỏ.
-
-Khi checkout, database sẽ:
-
-- Kiểm tra user hiện tại là `buyer` và địa chỉ thuộc về buyer đó.
-- Kiểm tra giỏ hàng không trống, sản phẩm còn `active`, biến thể còn đủ `stock`.
-- Tạo `orders`, copy toàn bộ `cart_items` sang `order_items`, tạo dòng `payments`.
-- Trừ tồn kho và chuyển cart hiện tại sang `checked_out`, sau đó tạo cart `active` mới.
-
-Frontend hiện dùng `CartContext` + `cartService` để:
-
-- Lưu giỏ hàng của buyer đã đăng nhập trên Supabase (`carts`, `cart_items`).
-- Cho khách chưa đăng nhập dùng tạm localStorage; khi đăng nhập, giỏ local được nhập vào giỏ Supabase.
-- Thêm, xoá, tăng/giảm số lượng sản phẩm trong giỏ.
-- Chọn từng sản phẩm hoặc chọn tất cả để thanh toán; checkout chỉ tính tiền và tạo đơn cho các sản phẩm đã tick.
-
-### Ví điện tử
-
-File `supabase/wallet_schema.sql` thêm các bảng/RPC:
-
-- `wallets` lưu số dư của từng user.
-- `wallet_transactions` lưu lịch sử nạp/rút, bao gồm giao dịch thanh toán đơn hàng bằng ví.
-- `get_or_create_wallet()` tạo/lấy ví cho user hiện tại.
-- `wallet_deposit(p_amount, p_note)` nạp tiền mô phỏng và ghi lịch sử.
-- `wallet_withdraw(p_amount, p_note)` rút tiền/thanh toán, kiểm tra số dư trước khi trừ.
-- `refund_payment(p_payment_id)` cho admin hoàn tiền; nếu đơn thanh toán bằng ví, số tiền được cộng lại vào ví user.
-
-Trang `/vi` cho phép user xem số dư, nạp/rút mô phỏng và xem lịch sử. Checkout có thêm phương thức `Ví HNstore`; nếu đủ số dư, hệ thống trừ ví, tạo đơn hàng và ghi `payments.payment_status = 'paid'`.
-
-## ⚠️ Phần đang để tạm / TODO
-
-- **Flash Sale**: UI vẫn giữ nguyên (mục đích trang trí) nhưng đang hiển thị lại "sản phẩm mới nhất" qua `getLatestProducts()`, **chưa có giảm giá thật**. Khi cần làm thật, thêm bảng `flash_sales` (`product_id`, `discount_percent`, `start_at`, `end_at`) rồi đổi `getFlashSaleProducts()` trong `productService.js`.
-- **soldCount**: chưa có nguồn dữ liệu — cần đếm từ `order_items` (tổng `quantity` theo `product_id`), chưa viết hàm.
-- **Tìm kiếm** (`/search`), **giỏ hàng** (`/gio-hang`), **trang đăng nhập**: chưa có route, mới có ghi chú trong `App.jsx`.
-
-## 🔌 Data còn lại trong `mockData.js`
-
-Sau khi chuyển sang Supabase, file này **chỉ nên giữ** `footerLinks` — nội dung tĩnh (chính sách, về chúng tôi...), không cần database. Mọi export khác (`categories`, `products`, `banners`...) đã được thay bằng query Supabase trong `services/`.
-
-## 📱 Responsive
-
-Mobile-first, breakpoints: `480px`, `600px`, `768px`, `992px`, `1100px`.
-
-## ✅ Đã hoàn thành
-
-- [x] Toàn bộ UI trang chủ (Header, Banner, Promo, WhyUs, TechNews, Newsletter, Footer)
-- [x] Trang danh mục, trang chi tiết sản phẩm
-- [x] Kết nối Supabase: products, categories, banners, promos, news
-- [x] Supabase Auth (signup/login) + auto-tạo profile qua trigger
-- [x] Schema marketplace: seller, variants, reviews, addresses, orders, payments
-- [x] Row Level Security cho toàn bộ bảng
-
-## 🔜 Gợi ý tiếp theo
-
-- [ ] Trang giỏ hàng + state quản lý cart (Context hoặc Zustand)
-- [ ] Trang tìm kiếm sản phẩm
-- [ ] Trang quản lý seller (CRUD sản phẩm, xem đơn hàng)
-- [ ] Tích hợp thanh toán thật (VNPay/Momo) → cập nhật bảng `payments`
-- [ ] Bảng `flash_sales` nếu muốn làm thật phần khuyến mãi giới hạn thời gian
-
-## . Thêm Route Guard
-Tạo 
-ProtectedRoute.jsx
-ProtectedRoute — chặn /gio-hang, /thanh-toan, /tai-khoan nếu chưa đăng nhập
-SellerRoute — chặn /seller nếu không phải seller/admin
-/admin đã có guard sẵn trong AdminLayout
-
-## . Seed data vào Supabase
-Tạo file seed.sql và chạy lên Supabase:
-
-5 brands, 5 categories, 5 category shortcuts
-3 banners, 3 promos, 4 tin tức
-10 sản phẩm thực tế (iPhone, Samsung, MacBook, Dell, Sony, Logitech)
-
-## . Fix kết nối Supabase
-Tắt RLS cho các bảng public (products, banners, news...)
-Cập nhật VITE_SUPABASE_ANON_KEY mới trong .env (key cũ bị 401)
-Restart dev server
-Kết quả cuối: trang web chạy có đầy đủ banner, categories, sản phẩm hiển thị.
+| Role | Email | Mật khẩu |
+|---|---|---|
+| Admin | *(xem Supabase Auth)* | Đặt qua SQL hoặc "Send recovery email" |
+| Seller | seller@hnstore.vn | *(seed data — đặt qua Supabase Auth)* |
+| Buyer | Đăng ký tại `/dang-ky` | Tự tạo |

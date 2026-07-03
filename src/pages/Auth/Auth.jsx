@@ -150,6 +150,7 @@ function RegisterForm({ onSuccess }) {
     if (!form.name.trim()) e.name = "Vui lòng nhập họ tên";
     if (!form.email.trim()) e.email = "Vui lòng nhập email";
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Email không hợp lệ";
+    if (form.phone.trim() && !/^0[3-9]\d{8}$/.test(form.phone.trim())) e.phone = "Số điện thoại không hợp lệ (VD: 0912345678)";
     if (!form.password) e.password = "Vui lòng nhập mật khẩu";
     else if (form.password.length < 6) e.password = "Mật khẩu tối thiểu 6 ký tự";
     if (form.confirm !== form.password) e.confirm = "Mật khẩu xác nhận không khớp";
@@ -202,7 +203,9 @@ function RegisterForm({ onSuccess }) {
       <div className={styles.field}>
         <label className={styles.label} htmlFor="reg-phone">Số điện thoại</label>
         <input id="reg-phone" name="phone" type="tel"
-          className={styles.input} placeholder="0912345678" value={form.phone} onChange={handleChange} />
+          className={`${styles.input} ${errors.phone ? styles.inputError : ""}`}
+          placeholder="0912345678" value={form.phone} onChange={handleChange} />
+        {errors.phone && <span className={styles.errorMsg}>{errors.phone}</span>}
       </div>
       <div className={styles.field}>
         <label className={styles.label} htmlFor="reg-password">Mật khẩu</label>

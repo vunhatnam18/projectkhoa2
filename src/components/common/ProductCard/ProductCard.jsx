@@ -4,8 +4,34 @@ import { Link } from "react-router-dom";
 import { formatPrice } from "../../../utils/format";
 import styles from "./ProductCard.module.css";
 
+const WISHLIST_KEY = "hnstore_wishlist";
+
+function loadWishlist() {
+  try { return JSON.parse(localStorage.getItem(WISHLIST_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function isWished(slug) {
+  return loadWishlist().some(i => i.slug === slug);
+}
+
+function toggleWishlist(product) {
+  const list = loadWishlist();
+  const exists = list.some(i => i.slug === product.slug);
+  const updated = exists
+    ? list.filter(i => i.slug !== product.slug)
+    : [...list, {
+        slug: product.slug,
+        name: product.name,
+        price: product.price ?? product.base_price ?? 0,
+        image: product.image ?? product.product_images?.[0]?.image_url ?? null,
+      }];
+  localStorage.setItem(WISHLIST_KEY, JSON.stringify(updated));
+  return !exists;
+}
+
 export default function ProductCard({ product, showBadge = false }) {
-  const [wished, setWished] = useState(false);
+  const [wished, setWished] = useState(() => isWished(product.slug));
 
   const price = product.price ?? product.base_price ?? 0;
   const originalPrice = product.originalPrice ?? null;
@@ -27,10 +53,11 @@ export default function ProductCard({ product, showBadge = false }) {
 
       <button
         className={`${styles.wish} ${wished ? styles.wished : ""}`}
-        aria-label="Yêu thích"
+        aria-label={wished ? "Bỏ yêu thích" : "Yêu thích"}
         onClick={(e) => {
           e.preventDefault();
-          setWished((w) => !w);
+          const newState = toggleWishlist(product);
+          setWished(newState);
         }}
       >
         {wished ? "❤️" : "🤍"}

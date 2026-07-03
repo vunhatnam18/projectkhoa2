@@ -8,18 +8,25 @@ import { useCategories } from "../../context/CategoryContext";
 import styles from "./Category.module.css";
 
 const SORT_OPTIONS = [
-  { value: "default", label: "Mặc định" },
-  { value: "price_asc", label: "Giá thấp → cao" },
-  { value: "price_desc", label: "Giá cao → thấp" },
-  { value: "newest", label: "Mới nhất" },
-  { value: "best_seller", label: "Bán chạy" },
+  { value: "default",     label: "Phổ biến nhất" },
+  { value: "price_asc",   label: "Giá thấp → cao" },
+  { value: "price_desc",  label: "Giá cao → thấp" },
+  { value: "newest",      label: "Mới nhất" },
+];
+
+const PRICE_RANGES = [
+  { label: "Tất cả",            min: 0,          max: Infinity },
+  { label: "Dưới 5 triệu",      min: 0,          max: 5000000 },
+  { label: "5 – 10 triệu",      min: 5000000,    max: 10000000 },
+  { label: "10 – 20 triệu",     min: 10000000,   max: 20000000 },
+  { label: "20 – 35 triệu",     min: 20000000,   max: 35000000 },
+  { label: "Trên 35 triệu",     min: 35000000,   max: Infinity },
 ];
 
 const PAGE_SIZE = 10;
 
 export default function Category() {
   const { slug } = useParams();
-
   const { categories, loading: categoriesLoading } = useCategories();
   const category = categories.find((c) => c.slug === slug);
 
@@ -28,11 +35,16 @@ export default function Category() {
   const [error, setError] = useState(null);
   const [sort, setSort] = useState("default");
   const [page, setPage] = useState(1);
+  const [priceRange, setPriceRange] = useState(0); // index vào PRICE_RANGES
+  const [selectedBrand, setSelectedBrand] = useState("all");
 
   useEffect(() => {
     setProductsLoading(true);
     setError(null);
     setPage(1);
+    setPriceRange(0);
+    setSelectedBrand("all");
+    setSort("default");
 
     getProductsByCategory(slug)
       .then(setProducts)
@@ -40,55 +52,110 @@ export default function Category() {
       .finally(() => setProductsLoading(false));
   }, [slug]);
 
-  // Sort phía client
-  const sorted = useMemo(() => {
-    const result = [...products];
+  // Lấy danh sách brand có trong category
+  const brands = useMemo(() => {
+    const map = new Map();
+    products.forEach(p => {
+      if (p.brands?.name) map.set(p.brands.name, p.brands.name);
+    });
+    return Array.from(map.values());
+  }, [products]);
+
+  // Filter + Sort
+  const filtered = useMemo(() => {
+    const range = PRICE_RANGES[priceRange];
+    let result = products.filter(p => {
+      const inPrice = p.price >= range.min && p.price < range.max;
+      const inBrand = selectedBrand === "all" || p.brands?.name === selectedBrand;
+      return inPrice && inBrand;
+    });
+
     switch (sort) {
-      case "price_asc":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price_desc":
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case "newest":
-        result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        break;
-      case "best_seller":
-        result.sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0));
-        break;
-      default:
-        break;
+      case "price_asc":  result.sort((a, b) => a.price - b.price); break;
+      case "price_desc": result.sort((a, b) => b.price - a.price); break;
+      case "newest":     result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); break;
+      default: break;
     }
     return result;
-  }, [products, sort]);
+  }, [products, sort, priceRange, selectedBrand]);
 
-  // Pagination
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
-  const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const loading = categoriesLoading || productsLoading;
+
+  function handleFilterChange(type, value) {
+    setPage(1);
+    if (type === "price")  setPriceRange(value);
+    if (type === "brand")  setSelectedBrand(value);
+    if (type === "sort")   setSort(value);
+  }
 
   return (
     <main className={styles.main}>
       <div className="container">
         <Breadcrumb items={[{ label: category ? category.name : slug }]} />
+        <h1 className={styles.title}>
+          {category?.icon && <span style={{ marginRight: 8 }}>{category.icon}</span>}
+          {category ? category.name : "Danh mục"}
+          {!loading && <span className={styles.productCount}>{filtered.length} sản phẩm</span>}
+        </h1>
 
-        <h1 className={styles.title}>{category ? category.name : "Danh mục"}</h1>
-
-        {/* Filter & Sort bar */}
         {!loading && products.length > 0 && (
-          <div className={styles.filterBar}>
-            <span className={styles.filterLabel}>Sắp xếp:</span>
-            <div className={styles.sortBtns}>
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  className={`${styles.sortBtn} ${sort === opt.value ? styles.sortBtnActive : ""}`}
-                  onClick={() => { setSort(opt.value); setPage(1); }}
-                >
-                  {opt.label}
-                </button>
-              ))}
+          <div className={styles.filterWrap}>
+            {/* Lọc theo giá */}
+            <div className={styles.filterGroup}>
+              <span className={styles.filterGroupLabel}>💰 Mức giá:</span>
+              <div className={styles.filterBtns}>
+                {PRICE_RANGES.map((r, i) => (
+                  <button
+                    key={i}
+                    className={`${styles.filterBtn} ${priceRange === i ? styles.filterBtnActive : ""}`}
+                    onClick={() => handleFilterChange("price", i)}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Lọc theo thương hiệu */}
+            {brands.length > 1 && (
+              <div className={styles.filterGroup}>
+                <span className={styles.filterGroupLabel}>🏷️ Thương hiệu:</span>
+                <div className={styles.filterBtns}>
+                  <button
+                    className={`${styles.filterBtn} ${selectedBrand === "all" ? styles.filterBtnActive : ""}`}
+                    onClick={() => handleFilterChange("brand", "all")}
+                  >
+                    Tất cả
+                  </button>
+                  {brands.map(b => (
+                    <button
+                      key={b}
+                      className={`${styles.filterBtn} ${selectedBrand === b ? styles.filterBtnActive : ""}`}
+                      onClick={() => handleFilterChange("brand", b)}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sắp xếp */}
+            <div className={styles.filterGroup}>
+              <span className={styles.filterGroupLabel}>↕️ Sắp xếp:</span>
+              <div className={styles.filterBtns}>
+                {SORT_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    className={`${styles.filterBtn} ${sort === opt.value ? styles.filterBtnActive : ""}`}
+                    onClick={() => handleFilterChange("sort", opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -101,9 +168,18 @@ export default function Category() {
             ))}
           </div>
         ) : error ? (
-          <p className={styles.empty}>Đã có lỗi xảy ra: {error}</p>
+          <p className={styles.empty}>Đã có lỗi: {error}</p>
         ) : paginated.length === 0 ? (
-          <p className={styles.empty}>Chưa có sản phẩm trong danh mục này.</p>
+          <div className={styles.emptyFilter}>
+            <p style={{ fontSize: 32, marginBottom: 8 }}>🔍</p>
+            <p>Không có sản phẩm phù hợp với bộ lọc.</p>
+            <button
+              onClick={() => { setPriceRange(0); setSelectedBrand("all"); setPage(1); }}
+              style={{ marginTop: 12, color: "var(--color-primary)", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}
+            >
+              Xoá bộ lọc
+            </button>
+          </div>
         ) : (
           <div className={styles.grid}>
             {paginated.map((p) => (
@@ -118,24 +194,18 @@ export default function Category() {
             <button
               className={`${styles.pageBtn} ${page === 1 ? styles.pageBtnDisabled : ""}`}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              ‹
-            </button>
+            >‹</button>
             {Array.from({ length: totalPages }).map((_, i) => (
               <button
                 key={i}
                 className={`${styles.pageBtn} ${page === i + 1 ? styles.pageBtnActive : ""}`}
                 onClick={() => setPage(i + 1)}
-              >
-                {i + 1}
-              </button>
+              >{i + 1}</button>
             ))}
             <button
               className={`${styles.pageBtn} ${page === totalPages ? styles.pageBtnDisabled : ""}`}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              ›
-            </button>
+            >›</button>
           </div>
         )}
       </div>

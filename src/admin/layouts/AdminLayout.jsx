@@ -14,7 +14,6 @@
 //
 // Xem chi tiết trong file src/admin/AdminRoutes.jsx
 
-import { useState } from 'react';
 import { NavLink, Outlet, Navigate } from 'react-router-dom';
 import { useAdminAuth } from '../hooks/useAdminAuth';
 import { supabase } from '../../services/supabaseClient';
@@ -27,12 +26,12 @@ const NAV_ITEMS = [
   { to: '/admin/sellers', label: 'Người bán', icon: IconStore },
   { to: '/admin/products', label: 'Sản phẩm', icon: IconBox },
   { to: '/admin/orders', label: 'Đơn hàng', icon: IconReceipt },
+  { to: '/admin/returns', label: 'Hoàn hàng', icon: IconReturn },
   { to: '/admin/payments', label: 'Thanh toán', icon: IconCard },
 ];
 
 export default function AdminLayout() {
   const { loading, isAdmin, user } = useAdminAuth();
-  const [collapsed, setCollapsed] = useState(false);
 
   if (loading) {
     return (
@@ -54,11 +53,11 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className={`admin-root adm-shell ${collapsed ? 'adm-shell-collapsed' : ''}`}>
+    <div className="admin-root adm-shell">
       <aside className="adm-sidebar">
         <div className="adm-sidebar-brand">
           <div className="adm-sidebar-logo">A</div>
-          {!collapsed && <span>Admin Console</span>}
+          <span>Admin Console</span>
         </div>
 
         <nav className="adm-nav">
@@ -70,20 +69,10 @@ export default function AdminLayout() {
               className={({ isActive }) => `adm-nav-link ${isActive ? 'adm-nav-link-active' : ''}`}
             >
               <item.icon />
-              {!collapsed && <span>{item.label}</span>}
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
-
-        <button
-          type="button"
-          className="adm-sidebar-collapse-btn"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-label={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
-        >
-          <IconChevron flipped={collapsed} />
-          {!collapsed && <span>Thu gọn</span>}
-        </button>
       </aside>
 
       <div className="adm-main">
@@ -165,6 +154,14 @@ function IconCard() {
       <rect x="2.5" y="5" width="19" height="14" rx="2.2" />
       <path d="M2.5 9.5h19" />
       <path d="M6 14.5h4" />
+    </svg>
+  );
+}
+function IconReturn() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M9 14l-4-4 4-4" />
+      <path d="M5 10h11a4 4 0 0 1 0 8h-1" />
     </svg>
   );
 }

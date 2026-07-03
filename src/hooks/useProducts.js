@@ -30,7 +30,7 @@ function useAsyncData(fetchFn, deps = []) {
 }
 
 export function useFlashSaleProducts() {
-  const { data, loading, error } = useAsyncData(() => getFlashSaleProducts(8), []);
+  const { data, loading, error } = useAsyncData(() => getFlashSaleProducts(20), []);
   return { products: data || [], loading, error };
 }
 

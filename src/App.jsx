@@ -16,6 +16,7 @@ import OrderLookup from "./pages/OrderLookup/OrderLookup";
 import Shipping from "./pages/Shipping/Shipping";
 import Account from "./pages/Account/Account";
 import Wallet from "./pages/Wallet/Wallet";
+import Wishlist from "./pages/Wishlist/Wishlist";
 import AllCategories from "./pages/AllCategories/AllCategories";
 import Seller from "./pages/Seller/Seller";
 import AdminLayout from "./admin/layouts/AdminLayout";
@@ -29,6 +30,7 @@ import ProductDetailPage from "./admin/pages/ProductDetailPage/ProductDetailPage
 import OrdersPage from "./admin/pages/OrdersPage/OrdersPage";
 import OrderDetailPage from "./admin/pages/OrderDetailPage/OrderDetailPage";
 import PaymentsPage from "./admin/pages/PaymentsPage/PaymentsPage";
+import ReturnRequestsPage from "./admin/pages/ReturnRequestsPage/ReturnRequestsPage";
 import { ProtectedRoute, SellerRoute } from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { ToastProvider } from "./components/Toast/Toast";
@@ -36,6 +38,7 @@ import { CategoryProvider } from "./context/CategoryContext";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { WalletProvider } from "./context/WalletContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import "./index.css";
 
 function NotFound() {
@@ -86,18 +89,20 @@ function NotFound() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <WalletProvider>
-          <CategoryProvider>
-            <CartProvider>
-              <ToastProvider>
-                <ScrollToTop />
-                <AppRoutes />
-              </ToastProvider>
-            </CartProvider>
-          </CategoryProvider>
-        </WalletProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <WalletProvider>
+            <CategoryProvider>
+              <CartProvider>
+                <ToastProvider>
+                  <ScrollToTop />
+                  <AppRoutes />
+                </ToastProvider>
+              </CartProvider>
+            </CategoryProvider>
+          </WalletProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
@@ -130,6 +135,7 @@ function AppRoutes() {
           <Route path="/tai-khoan" element={<Account />} />
           <Route path="/tai-khoan/:tab" element={<Account />} />
           <Route path="/vi" element={<Wallet />} />
+          <Route path="/yeu-thich" element={<Wishlist />} />
         </Route>
 
         {/* Routes yêu cầu seller / admin */}
@@ -146,6 +152,7 @@ function AppRoutes() {
           <Route path="products/:productId" element={<ProductDetailPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="returns" element={<ReturnRequestsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />

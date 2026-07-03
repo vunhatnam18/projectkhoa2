@@ -94,16 +94,16 @@ WHERE NOT EXISTS (SELECT 1 FROM products WHERE products.slug = v.slug);
 INSERT INTO product_images (product_id, image_url, display_order)
 SELECT p.id, v.image_url, 0
 FROM (VALUES
-  ('iphone-15-pro-max-256gb',   'https://placehold.co/600x600/1a1a2e/fff?text=iPhone+15+Pro+Max'),
-  ('iphone-15-128gb',           'https://placehold.co/600x600/16213e/fff?text=iPhone+15'),
-  ('samsung-galaxy-s24-ultra',  'https://placehold.co/600x600/0f3460/fff?text=Galaxy+S24'),
-  ('samsung-galaxy-a55-5g',     'https://placehold.co/600x600/533483/fff?text=Galaxy+A55'),
-  ('macbook-air-m2-8gb-256gb',  'https://placehold.co/600x600/2b2b2b/fff?text=MacBook+Air+M2'),
-  ('macbook-pro-m3-16gb-512gb', 'https://placehold.co/600x600/1a1a1a/fff?text=MacBook+Pro+M3'),
-  ('dell-xps-15-i7-16gb-512gb', 'https://placehold.co/600x600/e94560/fff?text=Dell+XPS+15'),
-  ('sony-wh-1000xm5',           'https://placehold.co/600x600/2b9348/fff?text=Sony+WH-1000XM5'),
-  ('airpods-pro-2nd-gen',       'https://placehold.co/600x600/333333/fff?text=AirPods+Pro+2'),
-  ('logitech-mx-master-3s',     'https://placehold.co/600x600/16213e/fff?text=MX+Master+3S')
+  ('iphone-15-pro-max-256gb',   'https://images.unsplash.com/photo-1663499482523-1c0c1bae4ce1?w=600&q=80'),
+  ('iphone-15-128gb',           'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&q=80'),
+  ('samsung-galaxy-s24-ultra',  'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=600&q=80'),
+  ('samsung-galaxy-a55-5g',     'https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?w=600&q=80'),
+  ('macbook-air-m2-8gb-256gb',  'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80'),
+  ('macbook-pro-m3-16gb-512gb', 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=600&q=80'),
+  ('dell-xps-15-i7-16gb-512gb', 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600&q=80'),
+  ('sony-wh-1000xm5',           'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80'),
+  ('airpods-pro-2nd-gen',       'https://images.unsplash.com/photo-1588423771073-b8903fead85c?w=600&q=80'),
+  ('logitech-mx-master-3s',     'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&q=80')
 ) AS v(slug, image_url)
 JOIN products p ON p.slug = v.slug
 WHERE NOT EXISTS (SELECT 1 FROM product_images WHERE product_images.product_id = p.id);

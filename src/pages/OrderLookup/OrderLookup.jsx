@@ -250,8 +250,7 @@ export default function OrderLookup() {
                 <div className={styles.notFound} style={{ marginTop: 16 }}>
                   Đơn hàng này đã bị hủy.
                 </div>
-              )}
-            </div>
+              )}            </div>
           )}
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useCart } from "../../context/CartContext";
 import { useCategories } from "../../context/CategoryContext";
 import { useAuth } from "../../context/AuthContext";
 import { useWallet } from "../../context/WalletContext";
+import { useTheme } from "../../context/ThemeContext";
 import { formatPrice } from "../../utils/format";
 import styles from "./Header.module.css";
 
@@ -15,7 +16,24 @@ export default function Header() {
   const { categories } = useCategories();
   const { user, profile } = useAuth();
   const { balance, loading: walletLoading } = useWallet();
+  const { dark, toggle: toggleTheme } = useTheme();
   const menuRef = useRef(null);
+
+  // Đếm wishlist từ localStorage
+  const [wishCount, setWishCount] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("hnstore_wishlist") || "[]").length; }
+    catch { return 0; }
+  });
+
+  useEffect(() => {
+    function onStorage(e) {
+      if (e.key === "hnstore_wishlist") {
+        try { setWishCount(JSON.parse(e.newValue || "[]").length); } catch { setWishCount(0); }
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   // Đóng dropdown khi click ra ngoài
   useEffect(() => {
@@ -47,6 +65,22 @@ export default function Header() {
             <Link to="/cua-hang" className={styles.topLink}>🏪 Cửa hàng gần bạn</Link>
           </div>
           <div className={styles.topActions}>
+            <button
+              onClick={toggleTheme}
+              className={styles.themeToggle}
+              aria-label={dark ? "Chuyển sang sáng" : "Chuyển sang tối"}
+              title={dark ? "Giao diện sáng" : "Giao diện tối"}
+            >
+              {dark ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1zm0 16a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1zm10-6a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1zM4 12a1 1 0 0 1-1 1H2a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1zm14.95-6.364a1 1 0 0 1 0 1.414l-.707.707a1 1 0 1 1-1.414-1.414l.707-.707a1 1 0 0 1 1.414 0zM6.757 17.657a1 1 0 0 1 0 1.414l-.707.707a1 1 0 1 1-1.414-1.414l.707-.707a1 1 0 0 1 1.414 0zm11.9 1.414a1 1 0 0 1-1.414 0l-.707-.707a1 1 0 1 1 1.414-1.414l.707.707a1 1 0 0 1 0 1.414zM6.757 6.343a1 1 0 0 1-1.414 0l-.707-.707A1 1 0 0 1 6.05 4.222l.707.707a1 1 0 0 1 0 1.414zM12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7z"/>
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+                </svg>
+              )}
+            </button>
             {user ? (
               <div style={{ display: "flex", gap: 16 }}>
                 {profile?.role === "admin" && (
@@ -150,6 +184,12 @@ export default function Header() {
               <span className={styles.cartIcon}>🛒</span>
               {totalItems > 0 && (
                 <span className={styles.cartBadge}>{totalItems > 99 ? "99+" : totalItems}</span>
+              )}
+            </Link>
+            <Link to="/yeu-thich" className={styles.actionItem} aria-label="Yêu thích">
+              <span className={styles.cartIcon}>❤️</span>
+              {wishCount > 0 && (
+                <span className={styles.cartBadge} style={{ background: "#e53935" }}>{wishCount}</span>
               )}
             </Link>
           </div>

@@ -156,7 +156,7 @@ export default function Cart() {
                     className={styles.qtyBtn}
                     onClick={() => handleQuantityChange(item, item.quantity + 1)}
                     aria-label="Tăng số lượng"
-                    disabled={loading || (item.stock > 0 && item.quantity >= item.stock)}
+                    disabled={loading || item.quantity >= (item.stock ?? 0)}
                   >
                     +
                   </button>

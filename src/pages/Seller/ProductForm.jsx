@@ -50,7 +50,9 @@ export default function ProductForm({ sellerId, editData, onSuccess }) {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value }));
     if (name === "name" && !editData) {
-      setForm(f => ({ ...f, name: value, slug: slugify(value) }));
+      // Thêm suffix ngẫu nhiên để tránh trùng slug
+      const suffix = Math.random().toString(36).slice(2, 6);
+      setForm(f => ({ ...f, name: value, slug: slugify(value) + "-" + suffix }));
     }
     setErrors(err => ({ ...err, [name]: "" }));
   }
