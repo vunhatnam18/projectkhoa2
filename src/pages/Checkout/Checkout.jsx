@@ -12,8 +12,8 @@ import styles from "./Checkout.module.css";
 const PAYMENT_METHODS = [
   { id: "cod", icon: "💵", name: "Thanh toán khi nhận hàng (COD)", desc: "Trả tiền mặt khi nhận hàng" },
   { id: "wallet", icon: "👛", name: "Ví HNstore", desc: "Trừ trực tiếp từ số dư ví của bạn" },
-  { id: "vnpay", icon: "💳", name: "VNPay", desc: "Thanh toán qua ví VNPay, thẻ ATM, Visa" },
-  { id: "momo", icon: "💜", name: "Ví MoMo", desc: "Thanh toán qua ví điện tử MoMo" },
+  { id: "vnpay", icon: "💳", name: "VNPay (Sắp hỗ trợ)", desc: "Tính năng đang phát triển", disabled: true },
+  { id: "momo", icon: "💜", name: "Ví MoMo (Sắp hỗ trợ)", desc: "Tính năng đang phát triển", disabled: true },
 ];
 
 const PROVINCES = ["Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ", "Tỉnh/thành khác"];
@@ -256,14 +256,14 @@ export default function Checkout() {
                     key={m.id}
                     className={`${styles.paymentOption} ${payment === m.id ? styles.paymentOptionActive : ""} ${
                       m.id === "wallet" && walletInsufficient ? styles.paymentOptionError : ""
-                    }`}
-                    onClick={() => setPayment(m.id)}
+                    } ${m.disabled ? styles.paymentOptionDisabled : ""}`}
+                    onClick={() => !m.disabled && setPayment(m.id)}
                   >
                     <span className={styles.paymentIcon}>{m.icon}</span>
                     <div>
                       <p className={styles.paymentName}>{m.name}</p>
                       <p className={styles.paymentDesc}>{m.desc}</p>
-                      {m.id === "wallet" && user && (
+                      {m.id === "wallet" && user && !m.disabled && (
                         <p className={walletInsufficient ? styles.paymentWarning : styles.paymentMeta}>
                           {walletLoading
                             ? "Đang tải số dư ví..."

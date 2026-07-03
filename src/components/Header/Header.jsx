@@ -45,7 +45,6 @@ export default function Header() {
             <Link to="/giao-hang" className={styles.topLink}>🚚 Giao nhanh – Miễn phí cho đơn từ 300K</Link>
             <a href="tel:18002097" className={styles.topLink}>📞 Tư vấn miễn phí 1800.2097</a>
             <Link to="/cua-hang" className={styles.topLink}>🏪 Cửa hàng gần bạn</Link>
-            <Link to="/tra-cuu-don-hang" className={styles.topLink}>📋 Tra cứu đơn hàng</Link>
           </div>
           <div className={styles.topActions}>
             {user ? (

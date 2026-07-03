@@ -210,6 +210,7 @@ export default function Wallet() {
                       </span>
                       <div>
                         <p className={styles.historyType}>{TX_TYPE_LABEL[tx.type] || tx.type}</p>
+                        {tx.note && <p className={styles.historyDate}>{tx.note}</p>}
                         <p className={styles.historyDate}>
                           {new Date(tx.created_at).toLocaleString("vi-VN")}
                         </p>

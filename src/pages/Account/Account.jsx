@@ -23,7 +23,6 @@ export default function Account() {
   const navigate = useNavigate();
   const { tab: paramTab } = useParams();
   const [tab, setTab] = useState(paramTab || "profile");
-
   if (!user) {
     return (
       <main className={styles.main}>
@@ -70,6 +69,7 @@ export default function Account() {
                   >
                     <span className={styles.navIcon}>{item.icon}</span>
                     {item.label}
+                    {item.link && <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.6 }}>↗</span>}
                   </button>
                 </li>
               ))}
@@ -92,19 +92,26 @@ function ProfileTab({ profile, user }) {
   const [form, setForm] = useState({ name: profile?.name || "", phone: profile?.phone || "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
-    await supabase.from("users").update({ name: form.name, phone: form.phone }).eq("id", user.id);
+    setSaveError("");
+    const { error } = await supabase.from("users").update({ name: form.name, phone: form.phone }).eq("id", user.id);
     setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (error) {
+      setSaveError("Lưu thất bại: " + error.message);
+    } else {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
   }
 
   return (
     <>
       <h2 className={styles.contentTitle}>Thông tin tài khoản</h2>
+      {saveError && <div style={{ color: "#e53935", background: "#fff5f5", padding: "10px 14px", borderRadius: 6, marginBottom: 12, fontSize: 13 }}>{saveError}</div>}
       <form className={styles.form} onSubmit={handleSave}>
         <div className={styles.field}>
           <label className={styles.label}>Họ và tên</label>
@@ -130,7 +137,8 @@ function ProfileTab({ profile, user }) {
 function OrdersTab({ userId }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [reviewTarget, setReviewTarget] = useState(null); // { orderId, item }
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [expandedOrders, setExpandedOrders] = useState({});
 
   useEffect(() => {
     getUserOrders(userId)
@@ -139,6 +147,10 @@ function OrdersTab({ userId }) {
       .finally(() => setLoading(false));
   }, [userId]);
 
+  function toggleExpand(orderId) {
+    setExpandedOrders(prev => ({ ...prev, [orderId]: !prev[orderId] }));
+  }
+
   if (loading) return <div className={styles.empty}>Đang tải...</div>;
   if (orders.length === 0) return <div className={styles.empty}>Bạn chưa có đơn hàng nào.</div>;
 
@@ -146,41 +158,54 @@ function OrdersTab({ userId }) {
     <>
       <h2 className={styles.contentTitle}>Đơn hàng của tôi</h2>
       <div className={styles.orderList}>
-        {orders.map(order => (
-          <div key={order.id} className={styles.orderCard}>
-            <div className={styles.orderCardHeader}>
-              <div>
-                <span className={styles.orderId}>Đơn #{order.id}</span>
-                <span className={styles.orderDate}> · {new Date(order.created_at).toLocaleDateString("vi-VN")}</span>
+        {orders.map(order => {
+          const allItems = order.order_items || [];
+          const isExpanded = expandedOrders[order.id];
+          const displayItems = isExpanded ? allItems : allItems.slice(0, 2);
+          return (
+            <div key={order.id} className={styles.orderCard}>
+              <div className={styles.orderCardHeader}>
+                <div>
+                  <span className={styles.orderId}>Đơn #{order.id}</span>
+                  <span className={styles.orderDate}> · {new Date(order.created_at).toLocaleDateString("vi-VN")}</span>
+                </div>
+                <span className={`${styles.orderStatus} ${STATUS_CLASS[order.status]}`}>
+                  {STATUS_LABEL[order.status]}
+                </span>
               </div>
-              <span className={`${styles.orderStatus} ${STATUS_CLASS[order.status]}`}>
-                {STATUS_LABEL[order.status]}
-              </span>
+              <div className={styles.orderCardBody}>
+                {displayItems.map((item, i) => {
+                  const product = item.product_variants?.products;
+                  const img = product?.product_images?.sort((a, b) => a.display_order - b.display_order)[0]?.image_url;
+                  return (
+                    <div key={i} className={styles.orderItem}>
+                      {img ? <img src={img} alt={product?.name} className={styles.itemImg} /> : <div className={styles.itemImgPlaceholder}>📦</div>}
+                      <p className={styles.itemName}>{product?.name}</p>
+                      <span className={styles.itemQty}>x{item.quantity}</span>
+                      <span className={styles.itemPrice}>{formatPrice(item.subtotal)}</span>
+                    </div>
+                  );
+                })}
+                {allItems.length > 2 && (
+                  <button
+                    onClick={() => toggleExpand(order.id)}
+                    style={{ background: "none", border: "none", color: "var(--color-primary)", cursor: "pointer", fontSize: 13, padding: "4px 0", fontWeight: 600 }}
+                  >
+                    {isExpanded ? "▲ Thu gọn" : `▼ Xem thêm ${allItems.length - 2} sản phẩm`}
+                  </button>
+                )}
+              </div>
+              <div className={styles.orderCardFooter}>
+                <p className={styles.orderTotal}>Tổng: <span>{formatPrice(order.total_amount)}</span></p>
+                {order.status === "delivered" && (
+                  <button className={styles.reviewBtn} onClick={() => setReviewTarget({ orderId: order.id, items: order.order_items })}>
+                    ⭐ Đánh giá
+                  </button>
+                )}
+              </div>
             </div>
-            <div className={styles.orderCardBody}>
-              {order.order_items?.slice(0, 2).map((item, i) => {
-                const product = item.product_variants?.products;
-                const img = product?.product_images?.sort((a, b) => a.display_order - b.display_order)[0]?.image_url;
-                return (
-                  <div key={i} className={styles.orderItem}>
-                    {img ? <img src={img} alt={product?.name} className={styles.itemImg} /> : <div className={styles.itemImgPlaceholder}>📦</div>}
-                    <p className={styles.itemName}>{product?.name}</p>
-                    <span className={styles.itemQty}>x{item.quantity}</span>
-                    <span className={styles.itemPrice}>{formatPrice(item.subtotal)}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className={styles.orderCardFooter}>
-              <p className={styles.orderTotal}>Tổng: <span>{formatPrice(order.total_amount)}</span></p>
-              {order.status === "delivered" && (
-                <button className={styles.reviewBtn} onClick={() => setReviewTarget({ orderId: order.id, items: order.order_items })}>
-                  ⭐ Đánh giá
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {reviewTarget && (

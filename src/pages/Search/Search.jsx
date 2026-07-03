@@ -33,7 +33,7 @@ export default function Search() {
   }, [keyword]);
 
   // Dùng hook đúng cách — gọi productService qua Supabase
-  const { products, loading } = useSearchProducts(keyword);
+  const { products, loading, error } = useSearchProducts(keyword);
 
   // Lọc + sort phía client
   const filtered = useMemo(() => {
@@ -81,12 +81,19 @@ export default function Search() {
           <h1 className={styles.title}>
             Kết quả tìm kiếm: <span className={styles.keyword}>"{keyword}"</span>
           </h1>
-          {!loading && (
+          {!loading && !error && (
             <span className={styles.resultCount}>
               {filtered.length} sản phẩm
             </span>
           )}
         </div>
+
+        {/* Lỗi fetch */}
+        {error && (
+          <div style={{ background: "#fff5f5", border: "1px solid #ffd0d0", borderRadius: 8, padding: "14px 18px", color: "#c0021b", fontSize: 14, marginBottom: 16 }}>
+            ⚠️ Không thể tìm kiếm: {error}. Vui lòng thử lại.
+          </div>
+        )}
 
         {/* Filter & Sort bar */}
         <div className={styles.filterBar}>

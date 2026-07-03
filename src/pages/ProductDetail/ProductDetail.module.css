@@ -192,6 +192,39 @@
   animation: shimmer 1.4s infinite;
 }
 
+.skeletonLayout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 32px;
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+}
+
+.skeletonImg {
+  width: 100%;
+  padding-top: 100%;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.skeletonInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.skeletonLine {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }

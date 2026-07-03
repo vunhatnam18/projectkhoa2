@@ -4,12 +4,14 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import Breadcrumb from "../../components/common/Breadcrumb/Breadcrumb";
 import { getProductBySlug } from "../../services/productService";
 import { useCart } from "../../context/CartContext";
+import { useToast } from "../../components/Toast/Toast";
 import { formatPrice } from "../../utils/format";
 import styles from "./ProductDetail.module.css";
 
 export default function ProductDetail() {
   const { slug } = useParams();
   const { addToCart } = useCart();
+  const { addToast } = useToast();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,16 @@ export default function ProductDetail() {
     return (
       <main className={styles.main}>
         <div className="container">
-          <div className={styles.skeleton} />
+          <div className={styles.skeletonLayout}>
+            <div className={styles.skeletonImg} />
+            <div className={styles.skeletonInfo}>
+              <div className={styles.skeletonLine} style={{ width: "70%", height: 28 }} />
+              <div className={styles.skeletonLine} style={{ width: "40%", height: 18 }} />
+              <div className={styles.skeletonLine} style={{ width: "50%", height: 40 }} />
+              <div className={styles.skeletonLine} style={{ width: "100%", height: 90 }} />
+              <div className={styles.skeletonLine} style={{ width: "100%", height: 48 }} />
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -71,9 +82,9 @@ export default function ProductDetail() {
   async function handleAddToCart() {
     try {
       await addToCart(getCartPayload(), qty);
-      alert(`Đã thêm ${qty} "${product.name}" vào giỏ hàng!`);
+      addToast(`Đã thêm "${product.name}" vào giỏ hàng!`, "success");
     } catch (err) {
-      alert("Không thể thêm vào giỏ hàng: " + err.message);
+      addToast("Không thể thêm vào giỏ hàng: " + err.message, "error");
     }
   }
 
@@ -82,7 +93,7 @@ export default function ProductDetail() {
       await addToCart(getCartPayload(), qty, { selectOnlyThis: true });
       navigate("/thanh-toan");
     } catch (err) {
-      alert("Không thể mua ngay: " + err.message);
+      addToast("Không thể mua ngay: " + err.message, "error");
     }
   }
 

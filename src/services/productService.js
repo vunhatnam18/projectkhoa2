@@ -63,8 +63,10 @@ export async function getProductBySlug(slug) {
   return normalizeProduct(data);
 }
 
-// Tìm kiếm sản phẩm
+// Tìm kiếm sản phẩm — tìm trong name và description
 export async function searchProducts(keyword) {
+  if (!keyword?.trim()) return [];
+
   const { data, error } = await supabase
     .from("products")
     .select(`
@@ -73,8 +75,9 @@ export async function searchProducts(keyword) {
       product_variants (price, stock),
       reviews (rating)
     `)
-    .ilike("name", `%${keyword}%`)
-    .eq("status", "active");
+    .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%`)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
   return (data || []).map(normalizeProduct);

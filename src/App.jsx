@@ -16,6 +16,7 @@ import OrderLookup from "./pages/OrderLookup/OrderLookup";
 import Shipping from "./pages/Shipping/Shipping";
 import Account from "./pages/Account/Account";
 import Wallet from "./pages/Wallet/Wallet";
+import AllCategories from "./pages/AllCategories/AllCategories";
 import Seller from "./pages/Seller/Seller";
 import AdminLayout from "./admin/layouts/AdminLayout";
 import DashBoard from "./admin/pages/DashBoard/DashBoard";
@@ -29,6 +30,8 @@ import OrdersPage from "./admin/pages/OrdersPage/OrdersPage";
 import OrderDetailPage from "./admin/pages/OrderDetailPage/OrderDetailPage";
 import PaymentsPage from "./admin/pages/PaymentsPage/PaymentsPage";
 import { ProtectedRoute, SellerRoute } from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
+import { ToastProvider } from "./components/Toast/Toast";
 import { CategoryProvider } from "./context/CategoryContext";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -37,9 +40,45 @@ import "./index.css";
 
 function NotFound() {
   return (
-    <div style={{ textAlign: "center", padding: "80px 20px" }}>
-      <h2 style={{ fontSize: 28, marginBottom: 12 }}>404 – Không tìm thấy trang</h2>
-      <a href="/" style={{ color: "var(--color-primary)", fontWeight: 600 }}>← Về trang chủ</a>
+    <div style={{
+      textAlign: "center",
+      padding: "80px 20px",
+      minHeight: "60vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 16,
+    }}>
+      <div style={{ fontSize: 80, lineHeight: 1 }}>🔍</div>
+      <h2 style={{ fontSize: 32, fontWeight: 800, color: "var(--color-text)" }}>404</h2>
+      <p style={{ fontSize: 16, color: "var(--color-text-secondary)", maxWidth: 360 }}>
+        Trang bạn tìm kiếm không tồn tại hoặc đã được di chuyển.
+      </p>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+        <a href="/" style={{
+          display: "inline-block",
+          padding: "11px 28px",
+          background: "var(--color-primary)",
+          color: "#fff",
+          borderRadius: "var(--radius-sm)",
+          fontWeight: 700,
+          fontSize: 14,
+        }}>
+          ← Về trang chủ
+        </a>
+        <a href="/search" style={{
+          display: "inline-block",
+          padding: "11px 28px",
+          border: "1.5px solid var(--color-primary)",
+          color: "var(--color-primary)",
+          borderRadius: "var(--radius-sm)",
+          fontWeight: 700,
+          fontSize: 14,
+        }}>
+          🔍 Tìm kiếm
+        </a>
+      </div>
     </div>
   );
 }
@@ -51,7 +90,10 @@ export default function App() {
         <WalletProvider>
           <CategoryProvider>
             <CartProvider>
-              <AppRoutes />
+              <ToastProvider>
+                <ScrollToTop />
+                <AppRoutes />
+              </ToastProvider>
             </CartProvider>
           </CategoryProvider>
         </WalletProvider>
@@ -69,6 +111,7 @@ function AppRoutes() {
       {!isAdminRoute && <Header />}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/danh-muc" element={<AllCategories />} />
         <Route path="/danh-muc/:slug" element={<Category />} />
         <Route path="/san-pham/:slug" element={<ProductDetail />} />
         <Route path="/search" element={<Search />} />
