@@ -4,6 +4,13 @@ import { Link } from "react-router-dom";
 import Breadcrumb from "../../components/common/Breadcrumb/Breadcrumb";
 import styles from "./Store.module.css";
 
+// Tính trạng thái mở/đóng theo giờ thực tế
+function isStoreOpen(openHour = 8, closeHour = 21) {
+  const now = new Date();
+  const h = now.getHours();
+  return h >= openHour && h < closeHour;
+}
+
 const STORES = [
   {
     id: 1,
@@ -11,7 +18,7 @@ const STORES = [
     address: "15 Đinh Tiên Hoàng, Hoàn Kiếm, Hà Nội",
     phone: "024.3825.1234",
     hours: "8:00 – 21:00",
-    open: true,
+    openHour: 8, closeHour: 21,
     mapQuery: "15+Đinh+Tiên+Hoàng,+Hoàn+Kiếm,+Hà+Nội",
   },
   {
@@ -20,7 +27,7 @@ const STORES = [
     address: "102 Xuân Thủy, Cầu Giấy, Hà Nội",
     phone: "024.3756.5678",
     hours: "8:00 – 21:00",
-    open: true,
+    openHour: 8, closeHour: 21,
     mapQuery: "102+Xuân+Thủy,+Cầu+Giấy,+Hà+Nội",
   },
   {
@@ -29,7 +36,7 @@ const STORES = [
     address: "78 Tây Sơn, Đống Đa, Hà Nội",
     phone: "024.3851.9012",
     hours: "8:00 – 21:00",
-    open: true,
+    openHour: 8, closeHour: 21,
     mapQuery: "78+Tây+Sơn,+Đống+Đa,+Hà+Nội",
   },
   {
@@ -38,7 +45,7 @@ const STORES = [
     address: "45 Bà Triệu, Hai Bà Trưng, Hà Nội",
     phone: "024.3943.3456",
     hours: "8:00 – 21:00",
-    open: false,
+    openHour: 8, closeHour: 21,
     mapQuery: "45+Bà+Triệu,+Hai+Bà+Trưng,+Hà+Nội",
   },
   {
@@ -47,10 +54,10 @@ const STORES = [
     address: "230 Nguyễn Văn Cừ, Long Biên, Hà Nội",
     phone: "024.3827.7890",
     hours: "8:00 – 21:00",
-    open: true,
+    openHour: 8, closeHour: 21,
     mapQuery: "230+Nguyễn+Văn+Cừ,+Long+Biên,+Hà+Nội",
   },
-];
+].map(s => ({ ...s, open: isStoreOpen(s.openHour, s.closeHour) }));
 
 export default function Store() {
   const [keyword, setKeyword] = useState("");
