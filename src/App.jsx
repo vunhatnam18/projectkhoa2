@@ -31,9 +31,12 @@ import OrdersPage from "./admin/pages/OrdersPage/OrdersPage";
 import OrderDetailPage from "./admin/pages/OrderDetailPage/OrderDetailPage";
 import PaymentsPage from "./admin/pages/PaymentsPage/PaymentsPage";
 import ReturnRequestsPage from "./admin/pages/ReturnRequestsPage/ReturnRequestsPage";
+import VouchersPage from "./admin/pages/VouchersPage/VouchersPage";
+import SupportPage from "./admin/pages/SupportPage/SupportPage";
 import { ProtectedRoute, SellerRoute } from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { ToastProvider } from "./components/Toast/Toast";
+import SupportChat from "./components/SupportChat/SupportChat";
 import { CategoryProvider } from "./context/CategoryContext";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -114,8 +117,7 @@ function AppRoutes() {
   return (
     <>
       {!isAdminRoute && <Header />}
-      <Routes>
-        <Route path="/" element={<Home />} />
+      <Routes>        <Route path="/" element={<Home />} />
         <Route path="/danh-muc" element={<AllCategories />} />
         <Route path="/danh-muc/:slug" element={<Category />} />
         <Route path="/san-pham/:slug" element={<ProductDetail />} />
@@ -153,11 +155,14 @@ function AppRoutes() {
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:orderId" element={<OrderDetailPage />} />
           <Route path="returns" element={<ReturnRequestsPage />} />
+          <Route path="vouchers" element={<VouchersPage />} />
+          <Route path="support" element={<SupportPage />} />
           <Route path="payments" element={<PaymentsPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <SupportChat />}
     </>
   );
 }

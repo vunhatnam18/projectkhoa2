@@ -6,6 +6,7 @@ import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { useWallet } from "../../context/WalletContext";
 import { checkoutSelectedCartItems } from "../../services/orderService";
+import { validateVoucher } from "../../services/voucherService";
 import { formatPrice } from "../../utils/format";
 import styles from "./Checkout.module.css";
 
@@ -49,11 +50,31 @@ export default function Checkout() {
   const [payment, setPayment] = useState("cod");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherData, setVoucherData] = useState(null); // { voucher, discount }
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [voucherError, setVoucherError] = useState("");
 
   const hasSelectedItems = selectedItems.length > 0;
   const shippingFee = selectedTotalPrice >= 300000 ? 0 : 30000;
-  const total = hasSelectedItems ? selectedTotalPrice + shippingFee : 0;
+  const discount = voucherData?.discount || 0;
+  const total = hasSelectedItems ? Math.max(0, selectedTotalPrice + shippingFee - discount) : 0;
   const walletInsufficient = payment === "wallet" && !walletLoading && balance < total;
+
+  async function handleApplyVoucher() {
+    if (!voucherCode.trim()) return;
+    setVoucherLoading(true);
+    setVoucherError("");
+    setVoucherData(null);
+    try {
+      const result = await validateVoucher(voucherCode, selectedTotalPrice);
+      setVoucherData(result);
+    } catch (err) {
+      setVoucherError(err.message);
+    } finally {
+      setVoucherLoading(false);
+    }
+  }
 
   // Chưa đăng nhập
   if (!user) {
@@ -308,6 +329,46 @@ export default function Checkout() {
               <span>Phí vận chuyển</span>
               <span>{shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}</span>
             </div>
+
+            {/* Voucher */}
+            <div className={styles.voucherRow}>
+              <input
+                className={styles.voucherInput}
+                placeholder="Nhập mã voucher..."
+                value={voucherCode}
+                onChange={e => { setVoucherCode(e.target.value.toUpperCase()); setVoucherError(""); setVoucherData(null); }}
+                disabled={!!voucherData}
+              />
+              {voucherData ? (
+                <button
+                  type="button"
+                  className={styles.voucherRemoveBtn}
+                  onClick={() => { setVoucherData(null); setVoucherCode(""); }}
+                >Xoá</button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.voucherApplyBtn}
+                  onClick={handleApplyVoucher}
+                  disabled={voucherLoading || !voucherCode.trim()}
+                >
+                  {voucherLoading ? "..." : "Áp dụng"}
+                </button>
+              )}
+            </div>
+            {voucherError && <p className={styles.voucherError}>{voucherError}</p>}
+            {voucherData && (
+              <div className={styles.voucherSuccess}>
+                🎉 {voucherData.voucher.description} — Giảm {formatPrice(voucherData.discount)}
+              </div>
+            )}
+
+            {discount > 0 && (
+              <div className={styles.summaryRow} style={{ color: "#1a7a3a", fontWeight: 600 }}>
+                <span>Giảm giá voucher</span>
+                <span>- {formatPrice(discount)}</span>
+              </div>
+            )}
             <div className={styles.summaryTotal}>
               <span>Tổng thanh toán</span>
               <span>{formatPrice(total)}</span>
