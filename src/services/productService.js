@@ -1,7 +1,5 @@
-// src/services/productService.js
 import { supabase } from "./supabaseClient";
 
-// Sản phẩm mới nhất — dùng cho trang chủ
 export async function getFlashSaleProducts(limit = 20) {
   const { data, error } = await supabase
     .from("products")
@@ -19,7 +17,6 @@ export async function getFlashSaleProducts(limit = 20) {
   return (data || []).map(normalizeProduct);
 }
 
-// Sản phẩm theo danh mục
 export async function getProductsByCategory(slug) {
   const { data: cat, error: catErr } = await supabase
     .from("categories")
@@ -44,7 +41,6 @@ export async function getProductsByCategory(slug) {
   return (data || []).map(normalizeProduct);
 }
 
-// Chi tiết 1 sản phẩm
 export async function getProductBySlug(slug) {
   const { data, error } = await supabase
     .from("products")
@@ -63,7 +59,6 @@ export async function getProductBySlug(slug) {
   return normalizeProduct(data);
 }
 
-// Tìm kiếm sản phẩm — tìm trong name và description
 export async function searchProducts(keyword) {
   if (!keyword?.trim()) return [];
 
@@ -83,7 +78,6 @@ export async function searchProducts(keyword) {
   return (data || []).map(normalizeProduct);
 }
 
-// Helper chuẩn hoá
 function normalizeProduct(p) {
   const images = (p.product_images || []).sort(
     (a, b) => a.display_order - b.display_order

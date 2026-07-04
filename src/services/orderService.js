@@ -11,7 +11,6 @@ function isMissingCheckoutRpc(error) {
   );
 }
 
-// Tạo địa chỉ, đơn hàng, chi tiết đơn và bản ghi thanh toán
 export async function createOrder({
   userId,
   address,
@@ -22,7 +21,6 @@ export async function createOrder({
   transactionId = null,
   paidAt = null,
 }) {
-  // 1. Lưu địa chỉ vào bảng addresses
   const { data: addr, error: addrErr } = await supabase
     .from("addresses")
     .insert([{
@@ -40,7 +38,6 @@ export async function createOrder({
 
   if (addrErr) throw new Error(addrErr.message);
 
-  // 2. Tạo đơn hàng
   const { data: order, error: orderErr } = await supabase
     .from("orders")
     .insert([{
@@ -54,7 +51,6 @@ export async function createOrder({
 
   if (orderErr) throw new Error(orderErr.message);
 
-  // 3. Tạo order_items
   const orderItems = items.map(item => ({
     order_id: order.id,
     variant_id: item.variantId,
@@ -69,7 +65,6 @@ export async function createOrder({
 
   if (itemsErr) throw new Error(itemsErr.message);
 
-  // 4. Ghi nhận thanh toán để admin/trang thành công đọc được cùng một nguồn dữ liệu
   const { error: paymentErr } = await supabase
     .from("payments")
     .insert([{
@@ -142,7 +137,6 @@ export async function checkoutSelectedCartItems({
   return { id: orderId };
 }
 
-// Lấy danh sách đơn hàng của user
 export async function getUserOrders(userId) {
   const { data, error } = await supabase
     .from("orders")
@@ -164,7 +158,6 @@ export async function getUserOrders(userId) {
   return data || [];
 }
 
-// Lấy chi tiết 1 đơn hàng
 export async function getOrderById(orderId) {
   const { data, error } = await supabase
     .from("orders")

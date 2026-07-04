@@ -1,4 +1,3 @@
-// src/context/CartContext.jsx
 import { createContext, useContext, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthContext";
 import {
@@ -10,7 +9,6 @@ import {
 } from "../services/cartService";
 
 const CartContext = createContext(undefined);
-
 const STORAGE_KEY = "hnstore_cart";
 const SELECTED_STORAGE_KEY = "hnstore_cart_selected";
 
@@ -97,7 +95,6 @@ export function CartProvider({ children }) {
     refreshCart();
   }, [refreshCart]);
 
-  // Lưu giỏ localStorage cho khách chưa đăng nhập.
   useEffect(() => {
     if (!isServerCart) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));

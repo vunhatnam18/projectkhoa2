@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../services/supabaseClient";
 
@@ -10,14 +9,12 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Lấy session hiện tại
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) fetchProfile(session.user.id);
       else setLoading(false);
     });
 
-    // Lắng nghe thay đổi auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setUser(session?.user ?? null);

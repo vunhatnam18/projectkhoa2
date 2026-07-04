@@ -1,8 +1,8 @@
-// src/components/CategoryPills/CategoryPills.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCategories } from "../../context/CategoryContext";
 import { getCategoryShortcuts } from "../../services/contentService";
+import CategoryIcon from "../common/CategoryIcon/CategoryIcon";
 import styles from "./CategoryPills.module.css";
 
 export default function CategoryPills() {
@@ -36,7 +36,7 @@ export default function CategoryPills() {
       <div className={styles.track}>
         {items.map((cat) => (
           <Link key={cat.id} to={`/danh-muc/${cat.slug}`} className={styles.pill}>
-            <span className={styles.icon}>{cat.icon || "📦"}</span>
+            <span className={styles.icon}><CategoryIcon slug={cat.slug} size={24} /></span>
             <span className={styles.name}>{cat.name}</span>
           </Link>
         ))}

@@ -36,19 +36,19 @@ export default function Home() {
 
         {/* Sản phẩm theo danh mục */}
         <section className={styles.section}>
-          <ProductSection title="Điện thoại" slug="dien-thoai" icon="📱" />
+          <ProductSection title="Điện thoại" slug="dien-thoai" />
         </section>
         <section className={styles.section}>
-          <ProductSection title="Laptop" slug="laptop" icon="💻" />
+          <ProductSection title="Laptop" slug="laptop" />
         </section>
         <section className={styles.section}>
-          <ProductSection title="Tai nghe" slug="tai-nghe" icon="🎧" />
+          <ProductSection title="Tai nghe" slug="tai-nghe" />
         </section>
         <section className={styles.section}>
-          <ProductSection title="Màn hình" slug="man-hinh" icon="🖥️" />
+          <ProductSection title="Màn hình" slug="man-hinh" />
         </section>
         <section className={styles.section}>
-          <ProductSection title="Phụ kiện" slug="phu-kien" icon="🖱️" />
+          <ProductSection title="Phụ kiện" slug="phu-kien" />
         </section>
 
         {/* Why us */}

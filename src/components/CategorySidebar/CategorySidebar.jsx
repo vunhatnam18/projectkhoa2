@@ -1,12 +1,10 @@
-// src/components/CategorySidebar/CategorySidebar.jsx — TOÀN BỘ FILE SAU KHI SỬA
-// ============================================================
-
 import { Link } from "react-router-dom";
-import { useCategories } from "../../context/CategoryContext"; // ✅ đổi import
+import { useCategories } from "../../context/CategoryContext";
+import CategoryIcon from "../common/CategoryIcon/CategoryIcon";
 import styles from "./CategorySidebar.module.css";
 
 export default function CategorySidebar() {
-  const { categories, loading, error } = useCategories(); // ✅ lấy từ Context, không tự fetch
+  const { categories, loading, error } = useCategories();
 
   if (loading) {
     return (
@@ -27,7 +25,7 @@ export default function CategorySidebar() {
         {categories.map((cat) => (
           <li key={cat.id} className={styles.item}>
             <Link to={`/danh-muc/${cat.slug}`} className={styles.link}>
-              <span className={styles.icon}>{cat.icon || "📦"}</span>
+              <span className={styles.icon}><CategoryIcon slug={cat.slug} size={18} /></span>
               <span className={styles.name}>{cat.name}</span>
               <span className={styles.arrow}>›</span>
             </Link>
