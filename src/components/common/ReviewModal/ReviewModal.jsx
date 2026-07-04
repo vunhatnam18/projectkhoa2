@@ -7,22 +7,36 @@ import styles from "./ReviewModal.module.css";
 export default function ReviewModal({ orderId, items, onClose }) {
   const { user } = useAuth();
   const [reviews, setReviews] = useState(
-    items.map(item => ({
-      productId: item.product_variants?.products?.id,
-      productName: item.product_variants?.products?.name,
-      rating: 5,
-      comment: "",
-    })).filter(r => r.productId)
+    items.map(item => {
+      // Hỗ trợ cả 2 cấu trúc data: nested và flat
+      const product = item.product_variants?.products || item.products || {};
+      const productId = product.id || item.product_id || null;
+      const productName = product.name || item.name || "Sản phẩm";
+      return { productId, productName, rating: 5, comment: "" };
+    }).filter(r => r.productId)
   );
+
+  // Nếu không parse được items, tạo 1 review generic
+  const displayReviews = reviews.length > 0 ? reviews : [{ productId: null, productName: "Sản phẩm trong đơn", rating: 5, comment: "" }];
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
   function setRating(idx, rating) {
-    setReviews(prev => prev.map((r, i) => i === idx ? { ...r, rating } : r));
+    setReviews(prev => {
+      const next = [...prev];
+      if (next[idx]) next[idx] = { ...next[idx], rating };
+      else next[idx] = { productId: null, productName: "Sản phẩm", rating, comment: "" };
+      return next;
+    });
   }
 
   function setComment(idx, comment) {
-    setReviews(prev => prev.map((r, i) => i === idx ? { ...r, comment } : r));
+    setReviews(prev => {
+      const next = [...prev];
+      if (next[idx]) next[idx] = { ...next[idx], comment };
+      else next[idx] = { productId: null, productName: "Sản phẩm", rating: 5, comment };
+      return next;
+    });
   }
 
   async function handleSubmit() {
@@ -61,14 +75,14 @@ export default function ReviewModal({ orderId, items, onClose }) {
         ) : (
           <>
             <div className={styles.reviewList}>
-              {reviews.map((r, idx) => (
+              {displayReviews.map((r, idx) => (
                 <div key={idx} className={styles.reviewItem}>
                   <p className={styles.productName}>{r.productName}</p>
-                  <StarPicker rating={r.rating} onChange={v => setRating(idx, v)} />
+                  <StarPicker rating={reviews[idx]?.rating || 5} onChange={v => setRating(idx, v)} />
                   <textarea
                     className={styles.textarea}
                     placeholder="Nhận xét của bạn (không bắt buộc)..."
-                    value={r.comment}
+                    value={reviews[idx]?.comment || ""}
                     onChange={e => setComment(idx, e.target.value)}
                     rows={3}
                   />
