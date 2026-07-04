@@ -42,7 +42,22 @@ export default function ReviewModal({ orderId, items, onClose }) {
   async function handleSubmit() {
     setLoading(true);
     try {
-      const insertData = reviews.map(r => ({
+      // Chỉ gửi review cho các item có productId hợp lệ
+      const validReviews = displayReviews
+        .map((r, idx) => ({
+          productId: r.productId,
+          rating: reviews[idx]?.rating || 5,
+          comment: reviews[idx]?.comment || "",
+        }))
+        .filter(r => r.productId);
+
+      if (validReviews.length === 0) {
+        alert("Không tìm thấy sản phẩm để đánh giá.");
+        setLoading(false);
+        return;
+      }
+
+      const insertData = validReviews.map(r => ({
         product_id: r.productId,
         user_id: user.id,
         order_id: orderId,

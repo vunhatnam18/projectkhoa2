@@ -153,7 +153,7 @@ export async function getUserOrders(userId) {
         quantity, price, subtotal,
         product_variants (
           color, size, storage,
-          products (name, slug, product_images (image_url, display_order))
+          products (id, name, slug, product_images (image_url, display_order))
         )
       )
     `)
