@@ -1,4 +1,3 @@
-// src/pages/Seller/Seller.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -15,18 +14,34 @@ import { formatPrice } from "../../utils/format";
 import ProductForm from "./ProductForm";
 import styles from "./Seller.module.css";
 
+function IcChart() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>;
+}
+function IcBox() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>;
+}
+function IcPlus() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+}
+function IcClock() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+}
+function IcShoppingCart() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>;
+}
+
 const SELLER_NAV = [
-  { id: "dashboard", icon: "📊", label: "Tổng quan" },
-  { id: "products", icon: "📦", label: "Sản phẩm của tôi" },
-  { id: "add", icon: "➕", label: "Thêm sản phẩm" },
+  { id: "dashboard", icon: <IcChart />, label: "Tổng quan" },
+  { id: "products", icon: <IcBox />,   label: "Sản phẩm của tôi" },
+  { id: "add",      icon: <IcPlus />,  label: "Thêm sản phẩm" },
 ];
 
 const ADMIN_NAV = [
-  { id: "dashboard", icon: "📊", label: "Tổng quan" },
-  { id: "pending", icon: "⏳", label: "Duyệt sản phẩm" },
-  { id: "orders", icon: "🛒", label: "Quản lý đơn hàng" },
-  { id: "products", icon: "📦", label: "Sản phẩm của tôi" },
-  { id: "add", icon: "➕", label: "Thêm sản phẩm" },
+  { id: "dashboard", icon: <IcChart />,        label: "Tổng quan" },
+  { id: "pending",   icon: <IcClock />,         label: "Duyệt sản phẩm" },
+  { id: "orders",    icon: <IcShoppingCart />,  label: "Quản lý đơn hàng" },
+  { id: "products",  icon: <IcBox />,           label: "Sản phẩm của tôi" },
+  { id: "add",       icon: <IcPlus />,          label: "Thêm sản phẩm" },
 ];
 
 const STATUS_LABEL = { pending: "Chờ duyệt", active: "Đang bán", locking: "Bị khoá" };
@@ -47,7 +62,9 @@ export default function Seller() {
       <main className={styles.main}>
         <div className="container">
           <div className={styles.denied}>
-            <div className={styles.deniedIcon}>🔒</div>
+            <div className={styles.deniedIcon}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
             <h2 className={styles.deniedTitle}>Không có quyền truy cập</h2>
             <p className={styles.deniedSub}>Trang này chỉ dành cho Seller và Admin.</p>
             <Link to="/" className={styles.homeBtn}>Về trang chủ</Link>
@@ -67,7 +84,7 @@ export default function Seller() {
           <div className={styles.sidebar}>
             <div className={styles.sideHeader}>
               <p className={styles.sideTitle}>{profile?.name || "Seller"}</p>
-              <p className={styles.sideRole}>{isAdmin ? "👑 Admin" : "🏪 Seller"}</p>
+              <p className={styles.sideRole}>{isAdmin ? "Admin" : "Seller"}</p>
             </div>
             <ul className={styles.navList}>
               {nav.map(item => (
